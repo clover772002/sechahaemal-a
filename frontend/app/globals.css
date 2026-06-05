@@ -869,9 +869,10 @@ button.day-card {
   height: 72px;
 }
 
-.browser-picker-icon svg {
+.browser-picker-icon img {
   width: 100%;
   height: 100%;
+  object-fit: contain;
 }
 
 .browser-picker-name {
