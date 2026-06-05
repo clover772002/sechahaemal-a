@@ -309,7 +309,9 @@ export default function HomePage() {
                     <span
                       className={`day-card-switch${expandedRainDays.has(day.label) ? " on" : ""}`}
                       aria-hidden="true"
-                    />
+                    >
+                      <span className="day-card-switch-rocker" />
+                    </span>
                     {expandedRainDays.has(day.label) && (
                       <div className="day-card-body">
                         <div className="day-value forecast-grade">{day.max_pop}%</div>
@@ -357,7 +359,9 @@ export default function HomePage() {
                     <span
                       className={`day-card-switch${expandedDustDays.has(day.label) ? " on" : ""}`}
                       aria-hidden="true"
-                    />
+                    >
+                      <span className="day-card-switch-rocker" />
+                    </span>
                     {expandedDustDays.has(day.label) && (
                       <div className="day-card-body">
                         <div className="day-value forecast-grade">
