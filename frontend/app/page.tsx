@@ -8,7 +8,7 @@ import { fetchAnalysis, getCurrentPosition, getLocationErrorMessage, LocationErr
 import type { AnalyzeResponse } from "@/lib/types";
 
 const KMA_WEATHER_URL = "https://www.weather.go.kr/w/index.do";
-const AIRKOREA_FORECAST_URL = "https://www.airkorea.or.kr/web/lastFiveDaysForecast";
+const AIRKOREA_FORECAST_URL = "https://www.airkorea.or.kr/web/dustForecast?pMENU_NO=113";
 
 function DustGrade({ grade }: { grade: number }) {
   const labels = ["", "좋음", "보통", "나쁨", "매우나쁨"];
