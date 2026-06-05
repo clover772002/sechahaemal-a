@@ -438,7 +438,8 @@ button.day-card {
   color: var(--rain);
 }
 
-.summary-bar.revealed {
+.summary-bar.revealed,
+.revealed-block {
   animation: summary-reveal 0.35s ease-out;
 }
 

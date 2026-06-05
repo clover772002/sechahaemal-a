@@ -58,6 +58,10 @@ export default function HomePage() {
     });
   };
 
+  const allRainDaysRevealed = expandedRainDays.size >= 3;
+  const allDustDaysRevealed = expandedDustDays.size >= 3;
+  const allForecastRevealed = allRainDaysRevealed && allDustDaysRevealed;
+
   const loadAnalysis = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -216,11 +220,13 @@ export default function HomePage() {
                 </button>
               ))}
             </div>
-            <div className="summary-bar">
-              <span>3일 평균 {result.rain_forecast.three_day_avg_pop}%</span>
-              <span>최대 {result.rain_forecast.three_day_max_pop}%</span>
-              <span>비 예보 {result.rain_forecast.rainy_day_count}일</span>
-            </div>
+            {allRainDaysRevealed && (
+              <div className="summary-bar revealed">
+                <span>3일 평균 {result.rain_forecast.three_day_avg_pop}%</span>
+                <span>최대 {result.rain_forecast.three_day_max_pop}%</span>
+                <span>비 예보 {result.rain_forecast.rainy_day_count}일</span>
+              </div>
+            )}
           </section>
 
           <section className="card">
@@ -273,18 +279,21 @@ export default function HomePage() {
                 </button>
               ))}
             </div>
-            <div className="summary-bar">
-              <span>
-                현재 {result.current_air.pm25_value} ㎍/㎥
-                {result.current_air.data_time && (
-                  <> ({result.current_air.data_time})</>
-                )}
-              </span>
-              <span>현재 {result.current_air.pm25_grade_label}</span>
-            </div>
+            {allDustDaysRevealed && (
+              <div className="summary-bar revealed">
+                <span>
+                  현재 {result.current_air.pm25_value} ㎍/㎥
+                  {result.current_air.data_time && (
+                    <> ({result.current_air.data_time})</>
+                  )}
+                </span>
+                <span>현재 {result.current_air.pm25_grade_label}</span>
+              </div>
+            )}
           </section>
 
-          <section className="card signal-card">
+          {allForecastRevealed && (
+          <section className="card signal-card revealed-block">
             <div className={`signal-light ${result.decision.signal}`}>
               {result.decision.signal === "green" && "🟢"}
               {result.decision.signal === "yellow" && "🟡"}
@@ -295,8 +304,10 @@ export default function HomePage() {
               종합 점수 {result.decision.score}점 · {result.decision.summary}
             </p>
           </section>
+          )}
 
-          <section className="card decision-logic-card">
+          {allForecastRevealed && (
+          <section className="card decision-logic-card revealed-block">
             <div className="section-title" style={{ marginBottom: 12 }}>
               최종 판정 로직
             </div>
@@ -399,6 +410,7 @@ export default function HomePage() {
               </>
             )}
           </section>
+          )}
         </>
       )}
 
