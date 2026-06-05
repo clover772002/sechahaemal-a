@@ -304,7 +304,10 @@ export default function HomePage() {
                   <div className="day-label">{day.label}</div>
                   <div className="day-card-content-zone">
                     {!expandedRainDays.has(day.label) && (
-                      <span className="day-card-hint">클릭</span>
+                      <span className="day-card-hint">
+                        <span className="day-card-switch" aria-hidden="true" />
+                        탭하여 켜기
+                      </span>
                     )}
                     <div className="day-card-body">
                       <div className="day-card-inner">
@@ -351,7 +354,10 @@ export default function HomePage() {
                   <div className="day-label">{day.label}</div>
                   <div className="day-card-content-zone">
                     {!expandedDustDays.has(day.label) && (
-                      <span className="day-card-hint">클릭</span>
+                      <span className="day-card-hint">
+                        <span className="day-card-switch" aria-hidden="true" />
+                        탭하여 켜기
+                      </span>
                     )}
                     <div className="day-card-body">
                       <div className="day-card-inner">
