@@ -99,7 +99,7 @@ async def fetch_weather_forecast(
         "base_datetime": format_base_datetime(resolved_date, resolved_time),
         "nx": nx,
         "ny": ny,
-        "source": "기상청 단기예보(getVilageFcst)",
+        "source": "기상청 단기예보",
     }
     return items or [], meta
 

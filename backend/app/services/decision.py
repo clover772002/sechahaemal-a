@@ -139,7 +139,7 @@ def evaluate_car_wash(rain_summary: dict, dust_forecast: dict, pollen_forecast: 
     ]
 
     overview_parts = [
-        "강수(기상청 단기예보)와 초미세먼지(에어코리아 PM2.5 권역 예보)",
+        "강수(기상청 단기예보)와 초미세먼지(PM2.5 권역 예보)",
     ]
     if pollen_available:
         overview_parts.append("꽃가루(기상청 꽃가루농도위험지수)")
@@ -157,7 +157,7 @@ def evaluate_car_wash(rain_summary: dict, dust_forecast: dict, pollen_forecast: 
         "logic": {
             "overview": "".join(overview_parts),
             "rain": {
-                "source": "기상청 단기예보(getVilageFcst)",
+                "source": "기상청 단기예보",
                 "pop_rule": pop_rule,
                 "three_day_max_pop": max_pop,
                 "three_day_avg_pop": avg_pop,
@@ -166,7 +166,7 @@ def evaluate_car_wash(rain_summary: dict, dust_forecast: dict, pollen_forecast: 
                 "days": rain_days_detail,
             },
             "dust": {
-                "source": "에어코리아 대기질예보통보(PM25)",
+                "source": "대기질예보통보(PM25)",
                 "region": dust_region,
                 "three_day_worst_grade": worst_dust,
                 "three_day_worst_label": DUST_LABELS.get(worst_dust, "보통"),

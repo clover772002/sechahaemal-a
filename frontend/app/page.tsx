@@ -325,9 +325,6 @@ export default function HomePage() {
                 )}
               </div>
               <div>집계 규칙: {result.rain_forecast.forecast_meta.pop_rule}</div>
-              <div>
-                예보 대조: 날씨누리 단기예보 → 시간별 강수확률 → 오늘·내일·모레 각 일자 최대값
-              </div>
             </div>
             <div className="day-grid">
               {result.rain_forecast.days.map((day, index) => (
@@ -365,7 +362,7 @@ export default function HomePage() {
           <section className="card">
             <div className="section-head">
               <div className="section-title">3일 초미세먼지 예보</div>
-              <VerifyLink href={AIRKOREA_FORECAST_URL} label="에어코리아 예보" />
+              <VerifyLink href={AIRKOREA_FORECAST_URL} label="대기질 예보" />
             </div>
             <div className="forecast-verify-meta">
               <div>
@@ -374,7 +371,6 @@ export default function HomePage() {
                   <> · 발표 {result.dust_forecast.forecast_meta.data_time}</>
                 )}
               </div>
-              <div>예보 대조: {result.dust_forecast.forecast_meta.verify_forecast_hint}</div>
             </div>
             <div className="day-grid">
               {result.dust_forecast.days.map((day, index) => (
@@ -428,7 +424,6 @@ export default function HomePage() {
                 )}
               </div>
               <div>{result.pollen_forecast.forecast_meta.season_note}</div>
-              <div>예보 대조: {result.pollen_forecast.forecast_meta.verify_hint}</div>
             </div>
             {result.pollen_forecast.available ? (
               <>
@@ -519,7 +514,7 @@ export default function HomePage() {
 
             <div className="logic-block">
               <div className="logic-block-title">
-                초미세먼지 (에어코리아 PM2.5 · {result.decision.logic.dust.region})
+                초미세먼지 (PM2.5 · {result.decision.logic.dust.region})
               </div>
               <ul className="logic-list">
                 <li>3일 최악 등급: {result.decision.logic.dust.three_day_worst_label}</li>
@@ -655,7 +650,7 @@ export default function HomePage() {
       )}
 
       <p className="footer">
-        데이터: 기상청 단기예보 · 에어코리아 대기오염/예보 · 기상청 꽃가루농도위험지수
+        데이터: 기상청 단기예보 · 대기질 예보 · 기상청 꽃가루농도위험지수
         (공공데이터포털)
       </p>
       <p className="footer-contact">

@@ -168,7 +168,7 @@ async def fetch_dust_forecast(region: str, station_name: str) -> dict:
             "station_name": station_name,
             "inform_code": "PM25",
             "data_time": issue_time,
-            "source": "에어코리아 대기질예보통보(PM25)",
+            "source": "대기질예보통보(PM25)",
             "verify_forecast_hint": (
                 f"미세먼지 농도 전망 표 → PM-2.5 행 → {region} 열(오늘·내일·모레)"
             ),
