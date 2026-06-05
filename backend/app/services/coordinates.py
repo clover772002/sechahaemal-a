@@ -129,6 +129,25 @@ PRESET_COORDS: dict[str, tuple[float, float]] = {
 }
 
 
+def find_weather_grid(lat: float, lng: float) -> tuple[int, int]:
+    """가장 가까운 대표 격자(기상청 일별 예보 기준)를 반환합니다."""
+    best = None
+    best_dist = float("inf")
+
+    for location in PRESET_LOCATIONS:
+        coords = PRESET_COORDS.get(location.id)
+        if not coords:
+            continue
+        dist = _haversine(lat, lng, coords[0], coords[1])
+        if dist < best_dist:
+            best_dist = dist
+            best = location
+
+    if best:
+        return best.nx, best.ny
+    return lat_lng_to_grid(lat, lng)
+
+
 def find_nearest_station(lat: float, lng: float) -> dict:
     """가장 가까운 프리셋 측정소를 반환합니다."""
     best = None

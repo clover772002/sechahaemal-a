@@ -131,49 +131,75 @@ def _weather_icon(sky: str, pty: str) -> str:
     return "sunny"
 
 
+def _empty_period() -> dict:
+    return {
+        "pop": 0,
+        "pop_display": "-",
+        "tmp": None,
+        "tmp_display": "-",
+        "sky": "1",
+        "pty": "0",
+        "sky_label": "맑음",
+        "pty_label": "없음",
+        "weather_icon": "sunny",
+    }
+
+
 def _summarize_period(
     hours: list[dict],
     date: str,
     period: str,
     daily_meta: dict[str, dict[str, int]],
+    *,
+    is_today: bool = False,
 ) -> dict:
+    now = datetime.now()
+    if is_today and period == "am" and now.hour >= 12:
+        return _empty_period()
+
     day_hours = [h for h in hours if h["date"] == date]
     slot_hours = [h for h in day_hours if _is_am(h["time"])] if period == "am" else [h for h in day_hours if _is_pm(h["time"])]
     meta = daily_meta.get(date, {})
 
-    if not slot_hours and not day_hours:
-        return {
-            "pop": 0,
-            "pop_display": "-",
-            "tmp": None,
-            "tmp_display": "-",
-            "sky": "1",
-            "pty": "0",
-            "sky_label": "맑음",
-            "pty_label": "없음",
-            "weather_icon": "sunny",
-        }
+    if not day_hours and not meta:
+        return _empty_period()
 
-    source_hours = slot_hours or day_hours
-    pop = max(h["pop"] for h in source_hours)
-    temps = [h["tmp"] for h in slot_hours if h["tmp"] is not None]
-    representative = sorted(source_hours, key=lambda h: h["time"])[len(source_hours) // 2]
+    pop = max((h["pop"] for h in slot_hours), default=0)
+    pop_display = "-" if not slot_hours or pop == 0 else f"{pop}%"
 
     if period == "am":
-        tmp = min(temps) if temps else meta.get("TMN")
+        tmp = meta.get("TMN")
+        if tmp is None and slot_hours:
+            temps = [h["tmp"] for h in slot_hours if h["tmp"] is not None]
+            tmp = min(temps) if temps else None
     else:
-        tmp = max(temps) if temps else meta.get("TMX")
+        tmp = meta.get("TMX")
+        if tmp is None and slot_hours:
+            temps = [h["tmp"] for h in slot_hours if h["tmp"] is not None]
+            tmp = max(temps) if temps else None
+
+    if slot_hours:
+        representative = sorted(slot_hours, key=lambda h: h["time"])[len(slot_hours) // 2]
+    elif day_hours:
+        representative = sorted(day_hours, key=lambda h: h["time"])[len(day_hours) // 2]
+    else:
+        representative = {"sky": "1", "pty": "0", "sky_label": "맑음", "pty_label": "없음"}
+
+    sky = representative["sky"]
+    pty = representative["pty"]
+    if pop >= 60 and pty == "0" and sky in {"1", "3"}:
+        sky = "4"
 
     return {
         "pop": pop,
-        "pop_display": "-" if pop == 0 else f"{pop}%",
+        "pop_display": pop_display,
         "tmp": tmp,
         "tmp_display": "-" if tmp is None else f"{tmp}°C",
-        "sky": representative["sky"],
-        "pty": representative["pty"],
-        "sky_label": representative["sky_label"],
+        "sky": sky,
+        "pty": pty,
+        "sky_label": SKY_LABELS.get(sky, representative["sky_label"]),
         "pty_label": representative["pty_label"],
-        "weather_icon": _weather_icon(representative["sky"], representative["pty"]),
+        "weather_icon": _weather_icon(sky, pty),
     }
 
 
@@ -192,8 +218,8 @@ def build_kma_daily_forecast(hours: list[dict], daily_meta: dict[str, dict[str, 
                 "date": date,
                 "date_title": f"{dt.day}일({WEEKDAY_LABELS[dt.weekday()]})",
                 "is_today": index == 0,
-                "am": _summarize_period(hours, date, "am", daily_meta),
-                "pm": _summarize_period(hours, date, "pm", daily_meta),
+                "am": _summarize_period(hours, date, "am", daily_meta, is_today=index == 0),
+                "pm": _summarize_period(hours, date, "pm", daily_meta, is_today=index == 0),
             }
         )
     return columns

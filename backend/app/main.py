@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.services.air_quality import fetch_air_quality, fetch_dust_forecast
-from app.services.coordinates import find_nearest_station, lat_lng_to_grid
+from app.services.coordinates import find_nearest_station, find_weather_grid
 from app.services.decision import evaluate_car_wash
 from app.services.weather import (
     fetch_weather_forecast,
@@ -42,7 +42,7 @@ async def analyze_location(
     lng: float = Query(..., ge=124.0, le=132.0, description="경도"),
 ):
     try:
-        nx, ny = lat_lng_to_grid(lat, lng)
+        nx, ny = find_weather_grid(lat, lng)
         station_info = find_nearest_station(lat, lng)
         station_name = station_info["station_name"]
         region = station_info["region"]
