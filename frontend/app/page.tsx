@@ -481,13 +481,17 @@ export default function HomePage() {
               {result.decision.signal_label}
             </h2>
             <p className="conclusion-score">종합 점수 {result.decision.score}점</p>
-            <button type="button" className="conclusion-share-btn" onClick={handleShareConclusion}>
-              공유하기
-            </button>
-            {shareNotice && <p className="conclusion-share-notice">{shareNotice}</p>}
-            <button type="button" className="conclusion-logic-link" onClick={openLogicSection}>
-              점수 로직이 궁금하다면?
-            </button>
+            <div className="conclusion-actions">
+              <div className="conclusion-share-wrap">
+                <button type="button" className="conclusion-share-btn" onClick={handleShareConclusion}>
+                  공유하기
+                </button>
+                {shareNotice && <p className="conclusion-share-notice">{shareNotice}</p>}
+              </div>
+              <button type="button" className="conclusion-logic-link" onClick={openLogicSection}>
+                점수 로직이 궁금하다면?
+              </button>
+            </div>
           </div>
         </div>
       )}
