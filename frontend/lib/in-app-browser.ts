@@ -42,22 +42,30 @@ export async function copyCurrentPageUrl(): Promise<boolean> {
   }
 }
 
-export function openInExternalBrowser(url?: string): void {
+export type ExternalBrowser = "safari" | "chrome";
+
+export function openInExternalBrowser(browser: ExternalBrowser, url?: string): void {
   if (typeof window === "undefined") return;
 
   const targetUrl = url ?? window.location.href;
   const ua = navigator.userAgent;
   const isAndroid = /android/i.test(ua);
   const isIOS = /iphone|ipad|ipod/i.test(ua);
+  const stripped = targetUrl.replace(/^https?:\/\//, "");
 
   if (isAndroid) {
-    const stripped = targetUrl.replace(/^https?:\/\//, "");
-    window.location.href = `intent://${stripped}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(targetUrl)};end`;
+    const packageName = browser === "chrome" ? "com.android.chrome" : "com.android.browser";
+    window.location.href = `intent://${stripped}#Intent;scheme=https;package=${packageName};S.browser_fallback_url=${encodeURIComponent(targetUrl)};end`;
     return;
   }
 
   if (isIOS) {
-    window.location.href = `googlechrome://${targetUrl.replace(/^https:\/\//, "")}`;
+    if (browser === "chrome") {
+      window.location.href = `googlechrome://${stripped}`;
+      return;
+    }
+
+    window.location.href = targetUrl.replace(/^https:\/\//, "x-safari-https://");
     return;
   }
 
