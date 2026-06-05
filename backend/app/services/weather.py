@@ -27,8 +27,6 @@ SKY_LABELS = {
 
 DAY_LABELS = ["오늘", "내일", "모레"]
 WEEKDAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"]
-AM_TIMES = {"0200", "0500", "0800", "1100"}
-PM_TIMES = {"1400", "1700", "2000", "2300"}
 
 
 def get_latest_base_datetime() -> tuple[str, str]:
@@ -57,7 +55,7 @@ async def fetch_weather_forecast(nx: int, ny: int) -> list[dict]:
         "base_time": base_time,
         "nx": str(nx),
         "ny": str(ny),
-        "numOfRows": "300",
+        "numOfRows": "1000",
         "pageNo": "1",
     }
 
@@ -74,13 +72,28 @@ async def fetch_weather_forecast(nx: int, ny: int) -> list[dict]:
     return items or []
 
 
+def _is_am(time: str) -> bool:
+    return "0600" <= time < "1200"
+
+
+def _is_pm(time: str) -> bool:
+    return "1200" <= time <= "2100"
+
+
 def parse_forecast_items(items: list[dict]) -> dict:
     timeline: dict[str, dict] = {}
+    daily_meta: dict[str, dict[str, int]] = {}
 
     for item in items:
-        key = f"{item['fcstDate']}{item['fcstTime']}"
+        date = item["fcstDate"]
+        category = item["category"]
+        if category in {"TMN", "TMX"}:
+            daily_meta.setdefault(date, {})[category] = int(float(item["fcstValue"]))
+            continue
+
+        key = f"{date}{item['fcstTime']}"
         timeline.setdefault(key, {})
-        timeline[key][item["category"]] = item["fcstValue"]
+        timeline[key][category] = item["fcstValue"]
 
     sorted_keys = sorted(timeline.keys())
     hours: list[dict] = []
@@ -97,11 +110,11 @@ def parse_forecast_items(items: list[dict]) -> dict:
                 "pty_label": PTY_LABELS.get(data.get("PTY", "0"), "알 수 없음"),
                 "sky": data.get("SKY", "1"),
                 "sky_label": SKY_LABELS.get(data.get("SKY", "1"), "알 수 없음"),
-                "tmp": int(data.get("TMP", "0")) if data.get("TMP") else None,
+                "tmp": int(float(data["TMP"])) if data.get("TMP") else None,
             }
         )
 
-    return {"hours": hours}
+    return {"hours": hours, "daily_meta": daily_meta}
 
 
 def _weather_icon(sky: str, pty: str) -> str:
@@ -118,9 +131,17 @@ def _weather_icon(sky: str, pty: str) -> str:
     return "sunny"
 
 
-def _summarize_period(hours: list[dict], date: str, allowed_times: set[str], temp_mode: str) -> dict:
-    slot_hours = [h for h in hours if h["date"] == date and h["time"] in allowed_times]
-    if not slot_hours:
+def _summarize_period(
+    hours: list[dict],
+    date: str,
+    period: str,
+    daily_meta: dict[str, dict[str, int]],
+) -> dict:
+    day_hours = [h for h in hours if h["date"] == date]
+    slot_hours = [h for h in day_hours if _is_am(h["time"])] if period == "am" else [h for h in day_hours if _is_pm(h["time"])]
+    meta = daily_meta.get(date, {})
+
+    if not slot_hours and not day_hours:
         return {
             "pop": 0,
             "pop_display": "-",
@@ -133,10 +154,15 @@ def _summarize_period(hours: list[dict], date: str, allowed_times: set[str], tem
             "weather_icon": "sunny",
         }
 
-    pop = max(h["pop"] for h in slot_hours)
+    source_hours = slot_hours or day_hours
+    pop = max(h["pop"] for h in source_hours)
     temps = [h["tmp"] for h in slot_hours if h["tmp"] is not None]
-    representative = sorted(slot_hours, key=lambda h: h["time"])[len(slot_hours) // 2]
-    tmp = min(temps) if temp_mode == "min" and temps else max(temps) if temps else None
+    representative = sorted(source_hours, key=lambda h: h["time"])[len(source_hours) // 2]
+
+    if period == "am":
+        tmp = min(temps) if temps else meta.get("TMN")
+    else:
+        tmp = max(temps) if temps else meta.get("TMX")
 
     return {
         "pop": pop,
@@ -151,7 +177,7 @@ def _summarize_period(hours: list[dict], date: str, allowed_times: set[str], tem
     }
 
 
-def build_kma_daily_forecast(hours: list[dict]) -> list[dict]:
+def build_kma_daily_forecast(hours: list[dict], daily_meta: dict[str, dict[str, int]]) -> list[dict]:
     """기상청 일별 예보 표 형식(오전/오후)으로 3일치를 구성합니다."""
     target_dates = [
         (datetime.now() + timedelta(days=i)).strftime("%Y%m%d") for i in range(3)
@@ -166,14 +192,14 @@ def build_kma_daily_forecast(hours: list[dict]) -> list[dict]:
                 "date": date,
                 "date_title": f"{dt.day}일({WEEKDAY_LABELS[dt.weekday()]})",
                 "is_today": index == 0,
-                "am": _summarize_period(hours, date, AM_TIMES, "min"),
-                "pm": _summarize_period(hours, date, PM_TIMES, "max"),
+                "am": _summarize_period(hours, date, "am", daily_meta),
+                "pm": _summarize_period(hours, date, "pm", daily_meta),
             }
         )
     return columns
 
 
-def summarize_rain_forecast(hours: list[dict]) -> dict:
+def summarize_rain_forecast(hours: list[dict], daily_meta: dict[str, dict[str, int]] | None = None) -> dict:
     """오늘·내일·모레 강수예보를 집계합니다."""
     target_dates = [
         (datetime.now() + timedelta(days=i)).strftime("%Y%m%d") for i in range(3)
@@ -211,7 +237,7 @@ def summarize_rain_forecast(hours: list[dict]) -> dict:
     max_values = [d["max_pop"] for d in days]
     return {
         "days": days,
-        "kma_daily": build_kma_daily_forecast(hours),
+        "kma_daily": build_kma_daily_forecast(hours, daily_meta or {}),
         "three_day_max_pop": max(max_values) if max_values else 0,
         "three_day_avg_pop": round(sum(max_values) / len(max_values)) if max_values else 0,
         "rainy_day_count": sum(1 for d in days if d["max_pop"] >= 40 or d["has_rain"]),

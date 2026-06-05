@@ -49,7 +49,7 @@ async def analyze_location(
 
         raw_forecast = await fetch_weather_forecast(nx, ny)
         forecast = parse_forecast_items(raw_forecast)
-        rain_summary = summarize_rain_forecast(forecast["hours"])
+        rain_summary = summarize_rain_forecast(forecast["hours"], forecast.get("daily_meta"))
 
         dust_forecast = await fetch_dust_forecast(region)
         current_air = await fetch_air_quality(station_name)
