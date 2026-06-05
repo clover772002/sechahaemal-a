@@ -4,7 +4,6 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
 import { fetchAnalysis, getCurrentPosition, getLocationErrorMessage, LocationError } from "@/lib/api";
 import { OnboardingGuide } from "@/components/OnboardingGuide";
-import { shouldShowOnboarding } from "@/lib/onboarding";
 import { shareConclusion } from "@/lib/share";
 import type { AnalyzeResponse } from "@/lib/types";
 
@@ -82,8 +81,6 @@ export default function HomePage() {
   const [showLogicSection, setShowLogicSection] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [shareNoticeSource, setShareNoticeSource] = useState<"popup" | "logic" | null>(null);
-  const [showOnboardingGuide, setShowOnboardingGuide] = useState(false);
-
   const openRainDay = (label: string) => {
     setExpandedRainDays((prev) => {
       if (prev.has(label)) return prev;
@@ -187,10 +184,6 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    setShowOnboardingGuide(shouldShowOnboarding());
-  }, []);
-
-  useEffect(() => {
     if (status === "authenticated") {
       loadAnalysis();
     }
@@ -248,9 +241,7 @@ export default function HomePage() {
             Google 계정으로 로그인
           </button>
         </section>
-        {showOnboardingGuide && (
-          <OnboardingGuide onClose={() => setShowOnboardingGuide(false)} />
-        )}
+        <OnboardingGuide />
       </main>
     );
   }

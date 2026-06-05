@@ -928,13 +928,6 @@ button.day-card {
   font-weight: 600;
 }
 
-.onboarding-lead-sub {
-  margin: 0 0 10px;
-  font-size: 0.88rem;
-  line-height: 1.55;
-  color: var(--muted);
-}
-
 .onboarding-list {
   margin: 0;
   padding-left: 1.1rem;
@@ -956,46 +949,4 @@ button.day-card {
   font-size: 0.74rem;
   line-height: 1.55;
   color: var(--muted);
-}
-
-.onboarding-footer {
-  margin-top: 18px;
-  padding-top: 16px;
-  border-top: 1px solid var(--line);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.onboarding-skip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.82rem;
-  color: var(--muted);
-  cursor: pointer;
-  user-select: none;
-}
-
-.onboarding-skip input {
-  width: 16px;
-  height: 16px;
-  accent-color: #7c3aed;
-}
-
-.onboarding-close-btn {
-  width: 100%;
-  padding: 12px 20px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #fff;
-  color: var(--text);
-  font-size: 0.92rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.onboarding-close-btn:active {
-  transform: scale(0.98);
 }

@@ -1,22 +1,4 @@
-"use client";
-
-import { useState } from "react";
-import { dismissOnboardingForToday } from "@/lib/onboarding";
-
-type OnboardingGuideProps = {
-  onClose: () => void;
-};
-
-export function OnboardingGuide({ onClose }: OnboardingGuideProps) {
-  const [skipToday, setSkipToday] = useState(false);
-
-  const handleClose = () => {
-    if (skipToday) {
-      dismissOnboardingForToday();
-    }
-    onClose();
-  };
-
+export function OnboardingGuide() {
   return (
     <section className="card onboarding-guide" aria-labelledby="onboarding-title">
       <header className="onboarding-header">
@@ -35,14 +17,6 @@ export function OnboardingGuide({ onClose }: OnboardingGuideProps) {
         </h3>
         <ul className="onboarding-list">
           <li>
-            전조등·유리·번호판 먼지가 쌓여 <strong>시야·안전</strong>이 걱정될 때 — 등화류 오염은
-            단속·사고 리스크로 이어질 수 있습니다.
-          </li>
-          <li>
-            <strong>새 배설물·벌레 사체·나무 수액</strong>이 묻었을 때 — 하루 이상 방치하면 도장면에{" "}
-            <strong>얼룩·부식</strong>으로 남기 쉽습니다.
-          </li>
-          <li>
             먼지가 이미 두껍게 쌓인 상태 — 이 상태에서 비만 오면{" "}
             <strong>먼지가 비에 눌러 붙어</strong> 물때·검은 줄띠가 생깁니다.
           </li>
@@ -60,7 +34,6 @@ export function OnboardingGuide({ onClose }: OnboardingGuideProps) {
         <p className="onboarding-lead">
           앞으로 3일 동안 차에 엉겨붙을 이물질(비·먼지·꽃가루)이 없어야, 세차 효과가 오래 갑니다.
         </p>
-        <p className="onboarding-lead-sub">그래서 아래처럼 보이면 오늘 세차는 손해일 수 있습니다.</p>
         <ul className="onboarding-list">
           <li>
             <strong>3일 안 강수확률이 높을 때</strong> — 세차 직후 비를 맞으면 먼지·미세먼지·꽃가루가
@@ -81,20 +54,6 @@ export function OnboardingGuide({ onClose }: OnboardingGuideProps) {
         예보는 확률·예측이며 실제와 다를 수 있습니다. 차량 상태·주행·주차 환경은 사람마다 달라
         참고용입니다.
       </p>
-
-      <footer className="onboarding-footer">
-        <label className="onboarding-skip">
-          <input
-            type="checkbox"
-            checked={skipToday}
-            onChange={(event) => setSkipToday(event.target.checked)}
-          />
-          <span>오늘 하루 이 창 띄우지 않기</span>
-        </label>
-        <button type="button" className="onboarding-close-btn" onClick={handleClose}>
-          닫기
-        </button>
-      </footer>
     </section>
   );
 }
