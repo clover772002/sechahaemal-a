@@ -64,6 +64,8 @@ export default function HomePage() {
     });
   };
 
+  const allRainDaysRevealed = expandedRainDays.size >= 3;
+
   const openDustDay = (label: string) => {
     setExpandedDustDays((prev) => {
       if (prev.has(label)) return prev;
@@ -199,15 +201,17 @@ export default function HomePage() {
               onOpenDay={openRainDay}
               forecastMeta={result.rain_forecast.forecast_meta}
             />
-            <div className="summary-bar">
-              <span>
-                3일 평균 <strong>{result.rain_forecast.three_day_avg_pop}%</strong>
-              </span>
-              <span>
-                최대 <strong>{result.rain_forecast.three_day_max_pop}%</strong>
-              </span>
-              <span>비 예보 {result.rain_forecast.rainy_day_count}일</span>
-            </div>
+            {allRainDaysRevealed && (
+              <div className="summary-bar revealed">
+                <span>
+                  3일 평균 <strong>{result.rain_forecast.three_day_avg_pop}%</strong>
+                </span>
+                <span>
+                  최대 <strong>{result.rain_forecast.three_day_max_pop}%</strong>
+                </span>
+                <span>비 예보 {result.rain_forecast.rainy_day_count}일</span>
+              </div>
+            )}
           </section>
 
           <section className="card">

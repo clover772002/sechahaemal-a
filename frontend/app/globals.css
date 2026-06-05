@@ -420,6 +420,21 @@ main {
   color: var(--rain);
 }
 
+.summary-bar.revealed {
+  animation: summary-reveal 0.35s ease-out;
+}
+
+@keyframes summary-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .signal-card {
   text-align: center;
   padding: 28px 18px;
