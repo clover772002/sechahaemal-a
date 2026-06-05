@@ -584,7 +584,7 @@ export default function HomePage() {
 
             {result.decision.reasons.length > 0 && (
               <>
-                <h3 className="logic-subtitle">4. 이번 위치에 적용된 요인</h3>
+                <h3 className="logic-subtitle">4. 최종점수 풀이</h3>
                 <ul className="logic-list logic-reasons">
                   {result.decision.reasons.map((reason) => (
                     <li key={reason}>{reason}</li>
