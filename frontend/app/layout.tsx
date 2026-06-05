@@ -3,8 +3,8 @@ import Providers from "@/components/Providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "세차해말아",
-  description: "내 위치 기준으로 지금 세차해도 될지 알려드립니다.",
+  title: "오늘 세차 할까?",
+  description: "내 위치 기준으로 오늘 세차해도 될지 알려드립니다.",
 };
 
 export default function RootLayout({

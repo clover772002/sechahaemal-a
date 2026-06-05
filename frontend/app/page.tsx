@@ -57,8 +57,8 @@ export default function HomePage() {
     return (
       <main>
         <section className="brand">
-          <h1>세차해말아</h1>
-          <p>내 위치 기준, 지금 세차해도 될까?</p>
+          <h1>오늘 세차 할까?</h1>
+          <p>날씨와 미세먼지로 알려드려요</p>
         </section>
         <section className="card login-card">
           <h2>Google로 시작하기</h2>
@@ -88,7 +88,7 @@ export default function HomePage() {
     <main>
       <div className="topbar">
         <section className="brand">
-          <h1>세차해말아</h1>
+          <h1>오늘 세차 할까?</h1>
           <p>{result ? `${result.location.region} · ${result.location.station_name}` : "내 위치 분석 중"}</p>
         </section>
         <div className="user-chip">

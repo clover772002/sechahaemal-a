@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="세차해말아 API",
+    title="오늘 세차 할까? API",
     description="현재 위치 기반 세차 적기 판단 API",
     version="0.2.0",
 )

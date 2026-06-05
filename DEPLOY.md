@@ -1,4 +1,4 @@
-# 세차해말아 배포 가이드
+# 오늘 세차 할까? 배포 가이드
 
 **프론트**: Vercel (Next.js)  
 **백엔드**: Railway (FastAPI + Docker)
