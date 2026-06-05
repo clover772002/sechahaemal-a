@@ -85,8 +85,13 @@ export default function HomePage() {
   const allForecastRevealed = allRainDaysRevealed && allDustDaysRevealed;
   const showConclusionPopup = conclusionReady && !conclusionDismissed;
 
-  const openLogicSection = () => {
+  const closeConclusionPopup = () => {
     setConclusionDismissed(true);
+    setShareNotice(null);
+  };
+
+  const openLogicSection = () => {
+    closeConclusionPopup();
     setShowLogicSection(true);
     requestAnimationFrame(() => {
       document.getElementById("decision-logic")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -500,6 +505,14 @@ export default function HomePage() {
                 점수 로직이 궁금하다면?
               </button>
             </div>
+            <button
+              type="button"
+              className="conclusion-close-btn"
+              onClick={closeConclusionPopup}
+              aria-label="닫고 예보 다시 보기"
+            >
+              ×
+            </button>
           </div>
         </div>
       )}
