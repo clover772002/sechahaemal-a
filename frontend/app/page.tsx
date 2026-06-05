@@ -1,9 +1,7 @@
 "use client";
 
 import { signIn, signOut, useSession } from "next-auth/react";
-import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
-import KmaDailyForecast from "@/components/KmaDailyForecast";
 import { fetchAnalysis, getCurrentPosition, getLocationErrorMessage, LocationError } from "@/lib/api";
 import type { AnalyzeResponse } from "@/lib/types";
 
@@ -16,17 +14,7 @@ function DustGrade({ grade }: { grade: number }) {
   return <>{labels[grade] ?? "보통"}</>;
 }
 
-function VerifyLink({
-  href,
-  label,
-  imageSrc,
-  imageAlt,
-}: {
-  href: string;
-  label: string;
-  imageSrc?: string;
-  imageAlt?: string;
-}) {
+function VerifyLink({ href, label }: { href: string; label: string }) {
   return (
     <a
       className="verify-link"
@@ -35,11 +23,7 @@ function VerifyLink({
       rel="noopener noreferrer"
       aria-label={`${label}에서 직접 확인`}
     >
-      {imageSrc ? (
-        <Image src={imageSrc} alt={imageAlt ?? label} width={120} height={28} className="verify-link-img" />
-      ) : (
-        <span className="verify-link-text">{label}</span>
-      )}
+      <span className="verify-link-text">{label}</span>
       <span className="verify-link-arrow" aria-hidden="true">
         ↗
       </span>
@@ -53,19 +37,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsLocation, setNeedsLocation] = useState(false);
-  const [expandedRainDays, setExpandedRainDays] = useState<Set<string>>(() => new Set());
   const [expandedDustDays, setExpandedDustDays] = useState<Set<string>>(() => new Set());
-
-  const openRainDay = (label: string) => {
-    setExpandedRainDays((prev) => {
-      if (prev.has(label)) return prev;
-      const next = new Set(prev);
-      next.add(label);
-      return next;
-    });
-  };
-
-  const allRainDaysRevealed = expandedRainDays.size >= 3;
 
   const openDustDay = (label: string) => {
     setExpandedDustDays((prev) => {
@@ -86,7 +58,6 @@ export default function HomePage() {
         position.coords.longitude,
       );
       setResult(data);
-      setExpandedRainDays(new Set());
       setExpandedDustDays(new Set());
     } catch (err) {
       setResult(null);
@@ -194,30 +165,38 @@ export default function HomePage() {
           <section className="card">
             <div className="section-head">
               <div className="section-title">3일 강수예보</div>
-              <VerifyLink
-                href={KMA_WEATHER_URL}
-                label="기상청 날씨누리"
-                imageSrc="/kma-weather-nuri.png"
-                imageAlt="기상청 날씨누리"
-              />
+              <VerifyLink href={KMA_WEATHER_URL} label="기상청 날씨누리" />
             </div>
-            <KmaDailyForecast
-              columns={result.rain_forecast.kma_daily}
-              expandedDays={expandedRainDays}
-              onOpenDay={openRainDay}
-              forecastMeta={result.rain_forecast.forecast_meta}
-            />
-            {allRainDaysRevealed && (
-              <div className="summary-bar revealed">
-                <span>
-                  3일 평균 <strong>{result.rain_forecast.three_day_avg_pop}%</strong>
-                </span>
-                <span>
-                  최대 <strong>{result.rain_forecast.three_day_max_pop}%</strong>
-                </span>
-                <span>비 예보 {result.rain_forecast.rainy_day_count}일</span>
+            <div className="dust-verify-meta">
+              <div>
+                {result.rain_forecast.forecast_meta.source}
+                {result.rain_forecast.forecast_meta.base_datetime && (
+                  <> · 발표 {result.rain_forecast.forecast_meta.base_datetime}</>
+                )}
               </div>
-            )}
+              <div>집계 규칙: {result.rain_forecast.forecast_meta.pop_rule}</div>
+              <div>
+                대조: 날씨누리 단기예보 → 시간별 강수확률 → 오늘·내일·모레 각 일자 최대값
+              </div>
+            </div>
+            <div className="day-grid">
+              {result.rain_forecast.days.map((day, index) => (
+                <div key={`${day.label}-${index}`} className="day-card rain">
+                  <div className="day-label">{day.label}</div>
+                  <div className="day-value">{day.max_pop}%</div>
+                  <div className="day-sub">강수확률</div>
+                </div>
+              ))}
+            </div>
+            <div className="summary-bar">
+              <span>
+                3일 평균 <strong>{result.rain_forecast.three_day_avg_pop}%</strong>
+              </span>
+              <span>
+                최대 <strong>{result.rain_forecast.three_day_max_pop}%</strong>
+              </span>
+              <span>비 예보 {result.rain_forecast.rainy_day_count}일</span>
+            </div>
           </section>
 
           <section className="card">
