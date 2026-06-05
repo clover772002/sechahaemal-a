@@ -16,9 +16,8 @@ export function BrowserPickerGate({ onSelect }: Props) {
     >
       <div className="browser-picker-modal">
         <p id="browser-picker-title" className="browser-picker-label">
-          Safari 또는 Chrome을 선택해 주세요
+          브라우저를 선택해 주세요
         </p>
-        <p className="browser-picker-sub">선택하면 아래 화면에서 바로 로그인할 수 있어요.</p>
         <div className="browser-picker-grid">
           <button type="button" className="browser-picker-btn" onClick={() => onSelect("safari")}>
             <span className="browser-picker-icon">
