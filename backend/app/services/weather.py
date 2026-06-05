@@ -356,12 +356,15 @@ def summarize_rain_forecast(
     if mid_data:
         merged_meta.update(
             {
+                "mid_status": "active",
                 "mid_tm_fc": mid_data["tm_fc"],
                 "mid_tm_fc_display": mid_data["tm_fc_display"],
                 "mid_land_reg_id": mid_data["land_reg_id"],
                 "mid_ta_reg_id": mid_data["ta_reg_id"],
             }
         )
+    else:
+        merged_meta["mid_status"] = "pending"
 
     return {
         "days": days,

@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime, timedelta
 
+import httpx
+
 from app.config import settings
 from app.services.api_client import get_json
 
@@ -74,7 +76,7 @@ async def _fetch_mid_payload(url: str, reg_id: str, tm_fc: str) -> dict:
     return items[0]
 
 
-async def fetch_mid_forecast(land_reg_id: str, ta_reg_id: str) -> dict:
+async def fetch_mid_forecast(land_reg_id: str, ta_reg_id: str) -> dict | None:
     if not settings.public_data_api_key:
         raise ValueError("PUBLIC_DATA_API_KEY가 설정되지 않았습니다.")
 
@@ -84,12 +86,19 @@ async def fetch_mid_forecast(land_reg_id: str, ta_reg_id: str) -> dict:
     try:
         land_item = await _fetch_mid_payload(settings.mid_land_api_url, land_reg_id, tm_fc)
         ta_item = await _fetch_mid_payload(settings.mid_ta_api_url, ta_reg_id, tm_fc)
+    except httpx.HTTPStatusError as exc:
+        if exc.response.status_code == 403:
+            logger.warning(
+                "중기예보 403: 활용신청 승인 대기 중이거나 동일 인증키에 미연동입니다. land=%s ta=%s",
+                land_reg_id,
+                ta_reg_id,
+            )
+            return None
+        logger.exception("중기예보 API HTTP 오류")
+        raise RuntimeError("중기예보 API 호출에 실패했습니다.") from exc
     except Exception as exc:
         logger.exception("중기예보 API 호출 실패")
-        raise RuntimeError(
-            "중기예보 API 호출에 실패했습니다. 공공데이터포털에서 "
-            "'기상청_중기예보 조회서비스' 활용신청이 되어 있는지 확인하세요."
-        ) from exc
+        raise RuntimeError("중기예보 API 호출에 실패했습니다.") from exc
 
     return {
         "tm_fc": tm_fc,

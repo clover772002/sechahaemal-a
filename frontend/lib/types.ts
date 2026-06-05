@@ -26,6 +26,7 @@ export interface ForecastMeta {
   nx: number;
   ny: number;
   source: string;
+  mid_status?: "active" | "pending";
   mid_tm_fc?: string;
   mid_tm_fc_display?: string;
   mid_land_reg_id?: string;
