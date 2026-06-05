@@ -210,12 +210,14 @@ export default function HomePage() {
     return () => window.clearTimeout(timer);
   }, [allForecastRevealed, conclusionDismissed]);
 
+  const showBrowserPickerPopup = !session && inAppBrowser.isInApp && !browserGatePassed;
+
   useEffect(() => {
-    document.body.style.overflow = showConclusionPopup ? "hidden" : "";
+    document.body.style.overflow = showConclusionPopup || showBrowserPickerPopup ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [showConclusionPopup]);
+  }, [showConclusionPopup, showBrowserPickerPopup, session]);
 
   if (status === "loading") {
     return (
@@ -226,23 +228,6 @@ export default function HomePage() {
   }
 
   if (!session) {
-    if (inAppBrowser.isInApp && !browserGatePassed) {
-      return (
-        <main className="browser-picker-main">
-          <section className="brand">
-            <h1>오늘 세차 할까?</h1>
-            <p>날씨와 미세먼지로 알려드려요</p>
-          </section>
-          <BrowserPickerGate
-            onSelect={(browser) => {
-              openInExternalBrowser(browser);
-              setBrowserGatePassed(true);
-            }}
-          />
-        </main>
-      );
-    }
-
     return (
       <main>
         <section className="brand">
@@ -267,6 +252,14 @@ export default function HomePage() {
           </button>
         </section>
         <OnboardingGuide />
+        {showBrowserPickerPopup && (
+          <BrowserPickerGate
+            onSelect={(browser) => {
+              openInExternalBrowser(browser);
+              setBrowserGatePassed(true);
+            }}
+          />
+        )}
       </main>
     );
   }

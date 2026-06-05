@@ -815,29 +815,45 @@ button.day-card {
   line-height: 1.6;
 }
 
-.browser-picker-main {
-  min-height: 100dvh;
+.browser-picker-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(3px);
+  animation: overlay-in 0.28s ease-out;
 }
 
-.browser-picker-main .brand {
-  margin-bottom: auto;
-}
-
-.browser-picker {
-  margin-top: auto;
-  margin-bottom: auto;
-  padding: 8px 0 32px;
+.browser-picker-modal {
+  width: min(100%, 320px);
+  padding: 28px 22px 24px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 24px 60px rgba(15, 23, 42, 0.2),
+    0 2px 0 rgba(255, 255, 255, 0.9) inset;
   text-align: center;
+  animation: modal-in 0.34s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .browser-picker-label {
-  margin: 0 0 28px;
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.5;
+  margin: 0 0 8px;
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.45;
   color: var(--text);
+}
+
+.browser-picker-sub {
+  margin: 0 0 22px;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--muted);
 }
 
 .browser-picker-grid {
