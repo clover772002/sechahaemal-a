@@ -202,10 +202,15 @@ export default function HomePage() {
                   aria-expanded={expandedRainDays.has(day.label)}
                 >
                   <div className="day-label">{day.label}</div>
-                  <div className="day-card-body">
-                    <div className="day-card-inner">
-                      <div className="day-value">{day.max_pop}%</div>
-                      <div className="day-sub">강수예보 · {day.risk_label}</div>
+                  <div className="day-card-content-zone">
+                    {!expandedRainDays.has(day.label) && (
+                      <span className="day-card-hint">클릭</span>
+                    )}
+                    <div className="day-card-body">
+                      <div className="day-card-inner">
+                        <div className="day-value">{day.max_pop}%</div>
+                        <div className="day-sub">강수예보 · {day.risk_label}</div>
+                      </div>
                     </div>
                   </div>
                 </button>
@@ -237,12 +242,17 @@ export default function HomePage() {
                   aria-expanded={expandedDustDays.has(day.label)}
                 >
                   <div className="day-label">{day.label}</div>
-                  <div className="day-card-body">
-                    <div className="day-card-inner">
-                      <div className="day-value dust-grade">
-                        <DustGrade grade={day.grade} />
+                  <div className="day-card-content-zone">
+                    {!expandedDustDays.has(day.label) && (
+                      <span className="day-card-hint">클릭</span>
+                    )}
+                    <div className="day-card-body">
+                      <div className="day-card-inner">
+                        <div className="day-value dust-grade">
+                          <DustGrade grade={day.grade} />
+                        </div>
+                        <div className="day-sub">PM2.5 예보</div>
                       </div>
-                      <div className="day-sub">PM2.5 예보</div>
                     </div>
                   </div>
                 </button>

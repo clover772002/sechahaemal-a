@@ -175,6 +175,27 @@ main {
   box-shadow: 0 4px 14px rgba(139, 92, 246, 0.14);
 }
 
+.day-card-content-zone {
+  position: relative;
+  width: 100%;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.day-card-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: var(--muted);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
 .day-card-body {
   display: grid;
   grid-template-rows: 0fr;
