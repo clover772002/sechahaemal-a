@@ -29,7 +29,7 @@ export function OnboardingGuide() {
 
       <section className="onboarding-section">
         <h3 className="onboarding-section-title">
-          <span>미루는</span> 게 나은 때
+          <span>미뤄야 할</span> 때
         </h3>
         <p className="onboarding-lead">
           앞으로 3일 동안 차에 엉겨붙을 이물질(비·먼지·꽃가루)이 없어야, 세차 효과가 오래 갑니다.
