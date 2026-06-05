@@ -1,0 +1,53 @@
+export interface RainDay {
+  label: string;
+  date: string;
+  max_pop: number;
+  avg_pop: number;
+  has_rain: boolean;
+  risk: "low" | "medium" | "high";
+  risk_label: string;
+}
+
+export interface DustDay {
+  label: string;
+  grade: number;
+  grade_label: string;
+  data_time: string | null;
+}
+
+export interface Decision {
+  score: number;
+  signal: "green" | "yellow" | "red";
+  signal_label: string;
+  summary: string;
+  reasons: string[];
+  criteria: string[];
+}
+
+export interface AnalyzeResponse {
+  location: {
+    lat: number;
+    lng: number;
+    region: string;
+    station_name: string;
+    station_addr: string;
+    grid: { nx: number; ny: number };
+  };
+  rain_forecast: {
+    days: RainDay[];
+    three_day_max_pop: number;
+    three_day_avg_pop: number;
+    rainy_day_count: number;
+  };
+  dust_forecast: {
+    days: DustDay[];
+    three_day_avg_grade: number;
+    three_day_worst_grade: number;
+    region: string;
+  };
+  current_air: {
+    pm25_value: string;
+    pm25_grade_label: string;
+  };
+  decision: Decision;
+}

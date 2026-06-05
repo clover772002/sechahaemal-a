@@ -1,0 +1,203 @@
+"use client";
+
+import { signIn, signOut, useSession } from "next-auth/react";
+import { useCallback, useEffect, useState } from "react";
+import { fetchAnalysis, getCurrentPosition, getLocationErrorMessage, LocationError } from "@/lib/api";
+import type { AnalyzeResponse } from "@/lib/types";
+
+function DustGrade({ grade }: { grade: number }) {
+  const labels = ["", "좋음", "보통", "나쁨", "매우나쁨"];
+  return <>{labels[grade] ?? "보통"}</>;
+}
+
+export default function HomePage() {
+  const { data: session, status } = useSession();
+  const [result, setResult] = useState<AnalyzeResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [needsLocation, setNeedsLocation] = useState(false);
+
+  const loadAnalysis = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const position = await getCurrentPosition();
+      const data = await fetchAnalysis(
+        position.coords.latitude,
+        position.coords.longitude,
+      );
+      setResult(data);
+    } catch (err) {
+      setResult(null);
+      const isLocationError =
+        err instanceof LocationError ||
+        (err && typeof err === "object" && "code" in err);
+      setNeedsLocation(Boolean(isLocationError));
+      setError(getLocationErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      loadAnalysis();
+    }
+  }, [status, loadAnalysis]);
+
+  if (status === "loading") {
+    return (
+      <main>
+        <div className="status">로그인 상태 확인 중...</div>
+      </main>
+    );
+  }
+
+  if (!session) {
+    return (
+      <main>
+        <section className="brand">
+          <h1>세차해말아</h1>
+          <p>내 위치 기준, 지금 세차해도 될까?</p>
+        </section>
+        <section className="card login-card">
+          <h2>Google로 시작하기</h2>
+          <p>
+            로그인 후 현재 위치를 자동으로 받아
+            <br />
+            오늘·내일·모레 날씨를 분석합니다.
+          </p>
+          <button className="google-btn" onClick={() => signIn("google")}>
+            <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+              <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.654 32.657 29.203 36 24 36c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C33.64 6.053 28.991 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+              <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C33.64 6.053 28.991 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
+              <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+              <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.004 8-11.303 8-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44c8.045 0 14.773-5.444 17.094-12.783z"/>
+            </svg>
+            Google 계정으로 로그인
+          </button>
+          <p className="footer" style={{ marginTop: 16 }}>
+            로그인이 안 되면 frontend/.env.local 에 Google Client ID/Secret을 입력했는지 확인하세요.
+          </p>
+        </section>
+      </main>
+    );
+  }
+
+  return (
+    <main>
+      <div className="topbar">
+        <section className="brand">
+          <h1>세차해말아</h1>
+          <p>{result ? `${result.location.region} · ${result.location.station_name}` : "내 위치 분석 중"}</p>
+        </section>
+        <div className="user-chip">
+          {session.user?.image && (
+            <img src={session.user.image} alt="" />
+          )}
+          <button
+            onClick={() => signOut()}
+            style={{ border: "none", background: "none", padding: 0, color: "inherit" }}
+          >
+            로그아웃
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <section className="card">
+          <div className="error" style={{ marginBottom: needsLocation ? 14 : 0 }}>{error}</div>
+          {needsLocation && (
+            <>
+              <button className="google-btn" onClick={loadAnalysis} disabled={loading}>
+                📍 위치 허용하기 / 다시 시도
+              </button>
+              <p className="footer" style={{ marginTop: 12, textAlign: "left" }}>
+                Chrome/Edge 주소창 왼쪽 자물쇠 아이콘 → 사이트 설정 → 위치 → <strong>허용</strong>
+                <br />
+                Cursor 내장 브라우저보다 일반 브라우저에서 더 잘 동작합니다.
+              </p>
+            </>
+          )}
+        </section>
+      )}
+      {loading && <div className="status">현재 위치 기준으로 분석 중...</div>}
+
+      {result && !loading && (
+        <>
+          <section className="card">
+            <div className="section-head">
+              <div className="section-title">3일 강수확률</div>
+              <div className="section-badge">오늘 · 내일 · 모레</div>
+            </div>
+            <div className="day-grid">
+              {result.rain_forecast.days.map((day) => (
+                <div className="day-card rain" key={day.date}>
+                  <div className="day-label">{day.label}</div>
+                  <div className="day-value">{day.max_pop}%</div>
+                  <div className="day-sub">{day.risk_label}</div>
+                </div>
+              ))}
+            </div>
+            <div className="summary-bar">
+              <span>
+                3일 평균 <strong>{result.rain_forecast.three_day_avg_pop}%</strong>
+              </span>
+              <span>
+                최대 <strong>{result.rain_forecast.three_day_max_pop}%</strong>
+              </span>
+              <span>비 예상 {result.rain_forecast.rainy_day_count}일</span>
+            </div>
+          </section>
+
+          <section className="card">
+            <div className="section-head">
+              <div className="section-title">3일 초미세먼지 예상</div>
+              <div className="section-badge">{result.dust_forecast.region}</div>
+            </div>
+            <div className="day-grid">
+              {result.dust_forecast.days.map((day, index) => (
+                <div className="day-card dust" key={`${day.label}-${index}`}>
+                  <div className="day-label">{day.label}</div>
+                  <div className="day-value" style={{ fontSize: "1.2rem" }}>
+                    <DustGrade grade={day.grade} />
+                  </div>
+                  <div className="day-sub">PM2.5 예상</div>
+                </div>
+              ))}
+            </div>
+            <div className="summary-bar">
+              <span>현재 {result.current_air.pm25_value} ㎍/㎥</span>
+              <span>현재 {result.current_air.pm25_grade_label}</span>
+            </div>
+          </section>
+
+          <section className="card signal-card">
+            <div className={`signal-light ${result.decision.signal}`}>
+              {result.decision.signal === "green" && "🟢"}
+              {result.decision.signal === "yellow" && "🟡"}
+              {result.decision.signal === "red" && "🔴"}
+            </div>
+            <h2 className="signal-title">{result.decision.signal_label}</h2>
+            <p className="signal-desc">{result.decision.summary}</p>
+          </section>
+
+          <section className="card">
+            <div className="section-title" style={{ marginBottom: 12 }}>
+              판정 기준
+            </div>
+            <ul className="criteria-list">
+              {result.decision.criteria.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </section>
+        </>
+      )}
+
+      <p className="footer">
+        데이터: 기상청 단기예보 · 에어코리아 대기오염/예보 (공공데이터포털)
+      </p>
+    </main>
+  );
+}
