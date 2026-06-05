@@ -79,20 +79,8 @@ export default function KmaDailyForecast({
         <div className="kma-daily-title">일별 예보</div>
         {forecastMeta && (
           <div className="kma-daily-meta">
-            단기 격자 {forecastMeta.nx},{forecastMeta.ny} · {forecastMeta.base_datetime}
-            {forecastMeta.mid_status === "active" && forecastMeta.mid_land_reg_id && (
-              <>
-                <br />
-                중기 {forecastMeta.mid_land_reg_id}/{forecastMeta.mid_ta_reg_id} ·{" "}
-                {forecastMeta.mid_tm_fc_display}
-              </>
-            )}
-            {forecastMeta.mid_status === "pending" && (
-              <>
-                <br />
-                중기예보 승인 대기 중 (단기예보만 표시)
-              </>
-            )}
+            기상청 단기예보 · 격자 {forecastMeta.nx},{forecastMeta.ny} · 발표{" "}
+            {forecastMeta.base_datetime}
           </div>
         )}
       </div>

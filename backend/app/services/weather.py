@@ -378,7 +378,6 @@ def summarize_rain_forecast(
     daily_meta: dict[str, dict[str, int]] | None = None,
     slots: dict[tuple[str, str], dict] | None = None,
     forecast_meta: dict | None = None,
-    mid_data: dict | None = None,
 ) -> dict:
     """오늘·내일·모레 강수예보를 집계합니다."""
     target_dates = [
@@ -416,33 +415,14 @@ def summarize_rain_forecast(
             }
         )
 
-    short_daily = build_kma_daily_forecast(slot_map, meta)
-    if mid_data:
-        from app.services.mid_forecast import merge_kma_daily_columns
-
-        kma_daily = merge_kma_daily_columns(short_daily, mid_data)
-    else:
-        kma_daily = short_daily
+    kma_daily = build_kma_daily_forecast(slot_map, meta)
 
     max_values = [d["max_pop"] for d in days]
-    merged_meta = dict(forecast_meta or {})
-    if mid_data:
-        merged_meta.update(
-            {
-                "mid_status": "active",
-                "mid_tm_fc": mid_data["tm_fc"],
-                "mid_tm_fc_display": mid_data["tm_fc_display"],
-                "mid_land_reg_id": mid_data["land_reg_id"],
-                "mid_ta_reg_id": mid_data["ta_reg_id"],
-            }
-        )
-    else:
-        merged_meta["mid_status"] = "pending"
 
     return {
         "days": days,
         "kma_daily": kma_daily,
-        "forecast_meta": merged_meta,
+        "forecast_meta": dict(forecast_meta or {}),
         "three_day_max_pop": max(max_values) if max_values else 0,
         "three_day_avg_pop": round(sum(max_values) / len(max_values)) if max_values else 0,
         "rainy_day_count": sum(1 for d in days if d["max_pop"] >= 40 or d["has_rain"]),
