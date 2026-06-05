@@ -495,7 +495,7 @@ export default function HomePage() {
           )}
           <section id="decision-logic" className="card decision-logic-card revealed-block">
             <div className="section-title" style={{ marginBottom: 12 }}>
-              최종 판정 로직
+              점수 계산 방법
             </div>
             <p className="logic-overview">{result.decision.logic.overview}</p>
 
