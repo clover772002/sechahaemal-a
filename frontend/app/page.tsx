@@ -462,7 +462,7 @@ export default function HomePage() {
             </h2>
             <p className="conclusion-score">종합 점수 {result.decision.score}점</p>
             <button type="button" className="conclusion-logic-link" onClick={openLogicSection}>
-              대신 점수 로직이 궁금하다면?
+              점수 로직이 궁금하다면?
             </button>
           </div>
         </div>
