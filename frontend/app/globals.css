@@ -574,6 +574,7 @@ button.day-card {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   width: min(100%, 220px);
   margin: 0;
   padding: 14px 28px;
@@ -594,6 +595,16 @@ button.day-card {
 
 .conclusion-share-btn:active {
   transform: scale(0.98);
+}
+
+.conclusion-share-icon {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .conclusion-share-notice {

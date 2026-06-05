@@ -484,7 +484,15 @@ export default function HomePage() {
             <div className="conclusion-actions">
               <div className="conclusion-share-wrap">
                 <button type="button" className="conclusion-share-btn" onClick={handleShareConclusion}>
-                  공유하기
+                  <svg
+                    className="conclusion-share-icon"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path d="M22 2 11 13" />
+                    <path d="M22 2 15 22 11 13 2 9 22 2Z" />
+                  </svg>
+                  <span>공유하기</span>
                 </button>
                 {shareNotice && <p className="conclusion-share-notice">{shareNotice}</p>}
               </div>
