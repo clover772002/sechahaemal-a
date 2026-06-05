@@ -528,6 +528,10 @@ export default function HomePage() {
       <p className="footer">
         데이터: 기상청 단기예보 · 에어코리아 대기오염/예보 (공공데이터포털)
       </p>
+      <p className="footer-contact">
+        문의사항 :{" "}
+        <a href="mailto:forsmartonly@gmail.com">forsmartonly@gmail.com</a>
+      </p>
     </main>
   );
 }
