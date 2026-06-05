@@ -8,7 +8,6 @@ import type { AnalyzeResponse } from "@/lib/types";
 
 const KMA_WEATHER_URL = "https://www.weather.go.kr/w/index.do";
 const AIRKOREA_FORECAST_URL = "https://www.airkorea.or.kr/web/dustForecast?pMENU_NO=113";
-const AIRKOREA_REALTIME_URL = "https://www.airkorea.or.kr/web/realSearch?pMENU_NO=97";
 const CONCLUSION_POPUP_DELAY_MS = 1100;
 
 function DustGrade({ grade }: { grade: number }) {
@@ -329,16 +328,7 @@ export default function HomePage() {
           <section className="card">
             <div className="section-head">
               <div className="section-title">3일 초미세먼지 예보</div>
-              <div className="verify-links">
-                <VerifyLink
-                  href={AIRKOREA_FORECAST_URL}
-                  label={`예보(${result.dust_forecast.forecast_meta.region})`}
-                />
-                <VerifyLink
-                  href={AIRKOREA_REALTIME_URL}
-                  label={`실시간(${result.location.station_name})`}
-                />
-              </div>
+              <VerifyLink href={AIRKOREA_FORECAST_URL} label="에어코리아 예보" />
             </div>
             <div className="forecast-verify-meta">
               <div>
@@ -348,7 +338,6 @@ export default function HomePage() {
                 )}
               </div>
               <div>예보 대조: {result.dust_forecast.forecast_meta.verify_forecast_hint}</div>
-              <div>실시간 대조: {result.dust_forecast.forecast_meta.verify_realtime_hint}</div>
             </div>
             <div className="day-grid">
               {result.dust_forecast.days.map((day, index) => (
