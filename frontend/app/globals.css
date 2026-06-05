@@ -815,6 +815,68 @@ button.day-card {
   line-height: 1.6;
 }
 
+.in-app-browser-notice {
+  margin: 0 0 18px;
+  padding: 14px 14px 12px;
+  border-radius: 12px;
+  border: 1px solid #fcd34d;
+  background: #fffbeb;
+  text-align: left;
+}
+
+.in-app-browser-notice-title {
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #92400e;
+  line-height: 1.45;
+}
+
+.in-app-browser-notice-text,
+.in-app-browser-notice-hint {
+  margin: 0 0 8px;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: #78350f;
+}
+
+.in-app-browser-notice-hint {
+  margin-bottom: 12px;
+}
+
+.in-app-browser-notice-hint strong {
+  font-weight: 700;
+}
+
+.in-app-browser-notice-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.in-app-browser-btn {
+  width: 100%;
+  border: 1px solid #f59e0b;
+  background: #fff;
+  border-radius: 10px;
+  padding: 11px 12px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.in-app-browser-btn--primary {
+  border-color: #d97706;
+  background: #f59e0b;
+  color: #fff;
+}
+
+.in-app-browser-notice-feedback {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #92400e;
+}
+
 .google-btn {
   width: 100%;
   border: 1px solid var(--line);

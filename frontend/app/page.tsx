@@ -3,7 +3,9 @@
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
 import { fetchAnalysis, getCurrentPosition, getLocationErrorMessage, LocationError } from "@/lib/api";
+import { InAppBrowserNotice } from "@/components/InAppBrowserNotice";
 import { OnboardingGuide } from "@/components/OnboardingGuide";
+import { detectInAppBrowser } from "@/lib/in-app-browser";
 import { shareConclusion } from "@/lib/share";
 import type { AnalyzeResponse } from "@/lib/types";
 
@@ -81,6 +83,7 @@ export default function HomePage() {
   const [showLogicSection, setShowLogicSection] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [shareNoticeSource, setShareNoticeSource] = useState<"popup" | "logic" | null>(null);
+  const [inAppBrowser, setInAppBrowser] = useState(() => detectInAppBrowser());
   const openRainDay = (label: string) => {
     setExpandedRainDays((prev) => {
       if (prev.has(label)) return prev;
@@ -184,6 +187,10 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    setInAppBrowser(detectInAppBrowser());
+  }, []);
+
+  useEffect(() => {
     if (status === "authenticated") {
       loadAnalysis();
     }
@@ -231,7 +238,15 @@ export default function HomePage() {
             <br />
             오늘·내일·모레 날씨를 분석합니다.
           </p>
-          <button className="google-btn" onClick={() => signIn("google")}>
+          <InAppBrowserNotice browser={inAppBrowser} />
+          <button
+            className="google-btn"
+            disabled={inAppBrowser.isInApp}
+            onClick={() => {
+              if (inAppBrowser.isInApp) return;
+              signIn("google");
+            }}
+          >
             <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
               <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.654 32.657 29.203 36 24 36c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C33.64 6.053 28.991 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
               <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C33.64 6.053 28.991 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
