@@ -489,12 +489,112 @@ main {
   line-height: 1.5;
 }
 
-.criteria-list {
-  margin: 0;
+.decision-logic-card {
+  font-size: 0.88rem;
+  line-height: 1.65;
+}
+
+.logic-overview {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+
+.logic-subtitle {
+  margin: 18px 0 8px;
+  font-size: 0.95rem;
+}
+
+.logic-block {
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--card) 92%, var(--muted) 8%);
+}
+
+.logic-block-title {
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.logic-list {
+  margin: 0 0 10px;
   padding-left: 18px;
   color: var(--muted);
-  line-height: 1.7;
-  font-size: 0.88rem;
+}
+
+.logic-note {
+  margin: 0 0 10px;
+  color: var(--muted);
+}
+
+.logic-day-table {
+  display: grid;
+  gap: 6px;
+}
+
+.logic-day-row {
+  display: grid;
+  grid-template-columns: 52px 1fr 1fr 1fr;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.logic-day-row--compact {
+  grid-template-columns: 52px 1fr;
+}
+
+.logic-flag-on {
+  color: #c45c2a;
+}
+
+.logic-flag-off {
+  color: var(--muted);
+}
+
+.logic-score-table {
+  display: grid;
+  gap: 6px;
+}
+
+.logic-score-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.logic-score-row--applied {
+  background: color-mix(in srgb, var(--card) 85%, #c45c2a 15%);
+  color: var(--text);
+}
+
+.logic-score-row--final {
+  margin-top: 4px;
+  border: 1px solid var(--line);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.logic-score-delta {
+  min-width: 48px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.logic-score-status {
+  min-width: 56px;
+  text-align: right;
+  font-size: 0.78rem;
+}
+
+.logic-reasons li {
+  color: var(--text);
 }
 
 .login-card {

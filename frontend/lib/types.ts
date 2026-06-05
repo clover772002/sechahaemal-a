@@ -57,13 +57,56 @@ export interface DustDay {
   data_time: string | null;
 }
 
+export interface DecisionScoreStep {
+  rule: string;
+  delta: number;
+  applied: boolean;
+}
+
+export interface DecisionLogic {
+  overview: string;
+  rain: {
+    source: string;
+    pop_rule: string;
+    three_day_max_pop: number;
+    three_day_avg_pop: number;
+    rainy_day_count: number;
+    rainy_day_rule: string;
+    days: Array<{
+      label: string;
+      max_pop: number;
+      has_rain: boolean;
+      counts_as_rainy: boolean;
+    }>;
+  };
+  dust: {
+    source: string;
+    region: string;
+    three_day_worst_grade: number;
+    three_day_worst_label: string;
+    three_day_avg_grade: number;
+    days: Array<{ label: string; grade: number; grade_label: string }>;
+  };
+  scoring: {
+    start: number;
+    steps: DecisionScoreStep[];
+    final: number;
+  };
+  thresholds: Array<{
+    signal: "green" | "yellow" | "red";
+    min_score?: number;
+    max_score?: number;
+    label: string;
+  }>;
+}
+
 export interface Decision {
   score: number;
   signal: "green" | "yellow" | "red";
   signal_label: string;
   summary: string;
   reasons: string[];
-  criteria: string[];
+  logic: DecisionLogic;
 }
 
 export interface AnalyzeResponse {
@@ -71,6 +114,7 @@ export interface AnalyzeResponse {
     lat: number;
     lng: number;
     region: string;
+    airkorea_region?: string;
     station_name: string;
     station_addr: string;
     grid: { nx: number; ny: number };

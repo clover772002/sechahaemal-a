@@ -58,7 +58,7 @@ def _parse_region_grade(inform_data: str, region: str) -> str | None:
         if ":" not in chunk:
             continue
         name, grade = chunk.split(":", 1)
-        if region in name.strip():
+        if name.strip() == region:
             return grade.strip()
     return None
 

@@ -283,18 +283,113 @@ export default function HomePage() {
               {result.decision.signal === "red" && "🔴"}
             </div>
             <h2 className="signal-title">{result.decision.signal_label}</h2>
-            <p className="signal-desc">{result.decision.summary}</p>
+            <p className="signal-desc">
+              종합 점수 {result.decision.score}점 · {result.decision.summary}
+            </p>
           </section>
 
-          <section className="card">
+          <section className="card decision-logic-card">
             <div className="section-title" style={{ marginBottom: 12 }}>
-              판정 기준
+              최종 판정 로직
             </div>
-            <ul className="criteria-list">
-              {result.decision.criteria.map((item) => (
-                <li key={item}>{item}</li>
+            <p className="logic-overview">{result.decision.logic.overview}</p>
+
+            <h3 className="logic-subtitle">1. 입력 데이터</h3>
+            <div className="logic-block">
+              <div className="logic-block-title">강수 (기상청 단기예보)</div>
+              <ul className="logic-list">
+                <li>집계 규칙: {result.decision.logic.rain.pop_rule}</li>
+                <li>
+                  3일 최대 {result.decision.logic.rain.three_day_max_pop}% · 평균{" "}
+                  {result.decision.logic.rain.three_day_avg_pop}%
+                </li>
+                <li>
+                  비 예보 일수 {result.decision.logic.rain.rainy_day_count}일 (
+                  {result.decision.logic.rain.rainy_day_rule})
+                </li>
+              </ul>
+              <div className="logic-day-table">
+                {result.decision.logic.rain.days.map((day) => (
+                  <div key={day.label} className="logic-day-row">
+                    <span>{day.label}</span>
+                    <span>최대 {day.max_pop}%</span>
+                    <span>{day.has_rain ? "강수 형태 있음" : "강수 형태 없음"}</span>
+                    <span className={day.counts_as_rainy ? "logic-flag-on" : "logic-flag-off"}>
+                      {day.counts_as_rainy ? "비 예보 일수 포함" : "미포함"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="logic-block">
+              <div className="logic-block-title">
+                초미세먼지 (에어코리아 PM2.5 · {result.decision.logic.dust.region})
+              </div>
+              <ul className="logic-list">
+                <li>3일 최악 등급: {result.decision.logic.dust.three_day_worst_label}</li>
+                <li>3일 평균 등급 점수: {result.decision.logic.dust.three_day_avg_grade}</li>
+                <li>현재 실측 농도는 화면 참고용이며 판정 점수에는 반영하지 않습니다.</li>
+              </ul>
+              <div className="logic-day-table">
+                {result.decision.logic.dust.days.map((day) => (
+                  <div key={day.label} className="logic-day-row logic-day-row--compact">
+                    <span>{day.label}</span>
+                    <span>{day.grade_label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <h3 className="logic-subtitle">2. 점수 계산</h3>
+            <p className="logic-note">시작 점수 {result.decision.logic.scoring.start}점에서 조건에 맞는 항목만 가감합니다.</p>
+            <div className="logic-score-table">
+              {result.decision.logic.scoring.steps.map((step) => (
+                <div
+                  key={step.rule}
+                  className={`logic-score-row${step.applied ? " logic-score-row--applied" : ""}`}
+                >
+                  <span className="logic-score-rule">{step.rule}</span>
+                  <span className="logic-score-delta">
+                    {step.delta > 0 ? `+${step.delta}` : step.delta}점
+                  </span>
+                  <span className="logic-score-status">{step.applied ? "적용" : "해당 없음"}</span>
+                </div>
+              ))}
+              <div className="logic-score-row logic-score-row--final">
+                <span className="logic-score-rule">최종 점수</span>
+                <span className="logic-score-delta">{result.decision.logic.scoring.final}점</span>
+                <span className="logic-score-status">{result.decision.signal_label}</span>
+              </div>
+            </div>
+
+            <h3 className="logic-subtitle">3. 신호등 기준</h3>
+            <ul className="logic-list">
+              {result.decision.logic.thresholds.map((item) => (
+                <li key={item.signal}>
+                  {item.signal === "green" && "🟢"}
+                  {item.signal === "yellow" && "🟡"}
+                  {item.signal === "red" && "🔴"}{" "}
+                  {item.min_score !== undefined && item.max_score !== undefined
+                    ? `${item.min_score}~${item.max_score}점`
+                    : item.min_score !== undefined
+                      ? `${item.min_score}점 이상`
+                      : `${item.max_score}점 이하`}
+                  : {item.label}
+                </li>
               ))}
             </ul>
+
+            {result.decision.reasons.length > 0 && (
+              <>
+                <h3 className="logic-subtitle">4. 이번 위치에 적용된 요인</h3>
+                <ul className="logic-list logic-reasons">
+                  {result.decision.reasons.map((reason) => (
+                    <li key={reason}>{reason}</li>
+                  ))}
+                </ul>
+              </>
+            )}
           </section>
         </>
       )}

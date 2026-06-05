@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.services.air_quality import fetch_air_quality, fetch_dust_forecast
-from app.services.coordinates import find_nearest_station, lat_lng_to_grid
+from app.services.coordinates import detect_airkorea_region, find_nearest_station, lat_lng_to_grid
 from app.services.decision import evaluate_car_wash
 from app.services.weather import (
     enrich_today_slots,
@@ -49,6 +49,7 @@ async def analyze_location(
         station_info = find_nearest_station(lat, lng)
         station_name = station_info["station_name"]
         region = station_info["region"]
+        airkorea_region = detect_airkorea_region(lat, lng, region)
 
         raw_forecast, forecast_meta = await fetch_weather_forecast(nx, ny)
         forecast = parse_forecast_items(raw_forecast)
@@ -67,7 +68,7 @@ async def analyze_location(
             forecast_meta,
         )
 
-        dust_forecast = await fetch_dust_forecast(region, station_name)
+        dust_forecast = await fetch_dust_forecast(airkorea_region, station_name)
         current_air = await fetch_air_quality(station_name)
         dust_forecast["forecast_meta"]["current_data_time"] = current_air.get("data_time")
         decision = evaluate_car_wash(rain_summary, dust_forecast)
@@ -85,6 +86,7 @@ async def analyze_location(
             "lat": lat,
             "lng": lng,
             "region": region,
+            "airkorea_region": airkorea_region,
             "station_name": station_name,
             "distance_km": station_info["distance_km"],
             "grid": {"nx": nx, "ny": ny},

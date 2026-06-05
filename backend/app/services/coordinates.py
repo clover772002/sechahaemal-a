@@ -105,6 +105,15 @@ def detect_region(lat: float, lng: float) -> str:
     return "서울"
 
 
+def detect_airkorea_region(lat: float, lng: float, base_region: str) -> str:
+    """에어코리아 미세먼지 예보 표의 열 이름에 맞게 권역을 세분화합니다."""
+    if base_region == "경기":
+        return "경기남부" if lat < 37.45 else "경기북부"
+    if base_region == "강원":
+        return "강원영동" if lng >= 128.0 else "강원영서"
+    return base_region
+
+
 def _haversine(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     r = 6371.0
     dlat = _to_rad(lat2 - lat1)
