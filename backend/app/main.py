@@ -69,7 +69,20 @@ async def analyze_location(
         )
 
         dust_forecast = await fetch_dust_forecast(airkorea_region, station_name)
-        current_air = await fetch_air_quality(station_name)
+        try:
+            current_air = await fetch_air_quality(station_name)
+        except RuntimeError as exc:
+            logger.warning("실시간 대기질 조회 실패(%s): %s", station_name, exc)
+            current_air = {
+                "data_time": None,
+                "pm10_value": "-",
+                "pm10_grade": None,
+                "pm10_grade_label": "측정 불가",
+                "pm25_value": "-",
+                "pm25_grade": None,
+                "pm25_grade_label": "측정 불가",
+                "unavailable_reason": str(exc),
+            }
         dust_forecast["forecast_meta"]["current_data_time"] = current_air.get("data_time")
         decision = evaluate_car_wash(rain_summary, dust_forecast)
     except ValueError as exc:

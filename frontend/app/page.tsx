@@ -168,6 +168,11 @@ export default function HomePage() {
       {error && (
         <section className="card">
           <div className="error" style={{ marginBottom: needsLocation ? 14 : 0 }}>{error}</div>
+          {!needsLocation && (
+            <button className="google-btn" onClick={loadAnalysis} disabled={loading} style={{ marginTop: 14 }}>
+              다시 시도
+            </button>
+          )}
           {needsLocation && (
             <>
               <button className="google-btn" onClick={loadAnalysis} disabled={loading}>

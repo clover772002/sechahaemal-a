@@ -1,4 +1,5 @@
 import logging
+import re
 from datetime import datetime
 
 from app.config import settings
@@ -51,8 +52,31 @@ async def fetch_air_quality(station_name: str) -> dict:
     }
 
 
+REGION_GROUP_MAP: dict[str, str] = {
+    "서울": "수도권",
+    "인천": "수도권",
+    "경기북부": "수도권",
+    "경기남부": "수도권",
+    "충북": "충북",
+    "충남": "충남",
+    "대전": "대전",
+    "세종": "세종",
+    "전북": "전북",
+    "전남": "전남",
+    "광주": "광주",
+    "대구": "대구",
+    "경북": "영남권",
+    "경남": "영남권",
+    "울산": "영남권",
+    "부산": "영남권",
+    "강원영서": "강원",
+    "강원영동": "강원",
+    "제주": "제주",
+}
+
+
 def _parse_region_grade(inform_data: str, region: str) -> str | None:
-    if not inform_data:
+    if not inform_data or ":" not in inform_data:
         return None
     for chunk in inform_data.split(","):
         if ":" not in chunk:
@@ -61,6 +85,31 @@ def _parse_region_grade(inform_data: str, region: str) -> str | None:
         if name.strip() == region:
             return grade.strip()
     return None
+
+
+def _parse_inform_overall_grade(inform_overall: str, region: str) -> str | None:
+    if not inform_overall:
+        return None
+
+    cleaned = inform_overall.replace("○", "").strip()
+    if "전 권역" in cleaned:
+        match = re.search(r"'([^']+)'", cleaned)
+        return match.group(1) if match else None
+
+    split_match = re.search(
+        r"(.+?)은 '([^']+)', 그 밖의 권역은 '([^']+)'",
+        cleaned,
+    )
+    if split_match:
+        groups_raw, primary_grade, fallback_grade = split_match.groups()
+        groups = [token.strip() for token in groups_raw.split("·") if token.strip()]
+        region_group = REGION_GROUP_MAP.get(region, region)
+        if region_group in groups or region in groups:
+            return primary_grade
+        return fallback_grade
+
+    match = re.search(r"'([^']+)'", cleaned)
+    return match.group(1) if match else None
 
 
 async def fetch_dust_forecast(region: str, station_name: str) -> dict:
@@ -83,7 +132,9 @@ async def fetch_dust_forecast(region: str, station_name: str) -> dict:
     for index, item in enumerate(items[:3]):
         grade_text = _parse_region_grade(item.get("informData", ""), region)
         if not grade_text:
-            grade_text = item.get("informOverall", "보통")
+            grade_text = _parse_inform_overall_grade(item.get("informOverall", ""), region)
+        if not grade_text:
+            grade_text = "보통"
 
         grade_num = TEXT_GRADE_MAP.get(grade_text, 2)
         days.append(
