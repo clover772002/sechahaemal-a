@@ -1,3 +1,24 @@
+export interface KmaPeriodForecast {
+  pop: number;
+  pop_display: string;
+  tmp: number | null;
+  tmp_display: string;
+  sky: string;
+  pty: string;
+  sky_label: string;
+  pty_label: string;
+  weather_icon: string;
+}
+
+export interface KmaDailyColumn {
+  label: string;
+  date: string;
+  date_title: string;
+  is_today: boolean;
+  am: KmaPeriodForecast;
+  pm: KmaPeriodForecast;
+}
+
 export interface RainDay {
   label: string;
   date: string;
@@ -35,6 +56,7 @@ export interface AnalyzeResponse {
   };
   rain_forecast: {
     days: RainDay[];
+    kma_daily: KmaDailyColumn[];
     three_day_max_pop: number;
     three_day_avg_pop: number;
     rainy_day_count: number;

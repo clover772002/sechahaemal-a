@@ -3,6 +3,7 @@
 import { signIn, signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
+import KmaDailyForecast from "@/components/KmaDailyForecast";
 import { fetchAnalysis, getCurrentPosition, getLocationErrorMessage, LocationError } from "@/lib/api";
 import type { AnalyzeResponse } from "@/lib/types";
 
@@ -192,30 +193,11 @@ export default function HomePage() {
                 imageAlt="기상청 날씨누리"
               />
             </div>
-            <div className="day-grid">
-              {result.rain_forecast.days.map((day) => (
-                <button
-                  key={day.date}
-                  type="button"
-                  className={`day-card rain${expandedRainDays.has(day.label) ? " expanded" : ""}`}
-                  onClick={() => openRainDay(day.label)}
-                  aria-expanded={expandedRainDays.has(day.label)}
-                >
-                  <div className="day-label">{day.label}</div>
-                  <div className="day-card-content-zone">
-                    {!expandedRainDays.has(day.label) && (
-                      <span className="day-card-hint">클릭</span>
-                    )}
-                    <div className="day-card-body">
-                      <div className="day-card-inner">
-                        <div className="day-value">{day.max_pop}%</div>
-                        <div className="day-sub">강수예보 · {day.risk_label}</div>
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
+            <KmaDailyForecast
+              columns={result.rain_forecast.kma_daily}
+              expandedDays={expandedRainDays}
+              onOpenDay={openRainDay}
+            />
             <div className="summary-bar">
               <span>
                 3일 평균 <strong>{result.rain_forecast.three_day_avg_pop}%</strong>

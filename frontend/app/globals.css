@@ -219,6 +219,161 @@ main {
   font-size: 1.2rem;
 }
 
+.kma-daily {
+  margin-top: 4px;
+}
+
+.kma-daily-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.kma-daily-table {
+  border: 1px solid #d7dee8;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.kma-daily-row {
+  display: grid;
+  grid-template-columns: 58px repeat(3, 1fr);
+  border-top: 1px solid #e8edf3;
+}
+
+.kma-daily-row:first-child {
+  border-top: none;
+}
+
+.kma-daily-label {
+  background: #f3f7fb;
+  color: #4b5563;
+  font-size: 0.72rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px;
+  border-right: 1px solid #e8edf3;
+}
+
+.kma-daily-col-head,
+.kma-daily-cell {
+  border-right: 1px dashed #e2e8f0;
+  min-height: 52px;
+}
+
+.kma-daily-col-head:last-child,
+.kma-daily-cell:last-child {
+  border-right: none;
+}
+
+.kma-daily-col-head {
+  width: 100%;
+  border: none;
+  background: #f8fafc;
+  padding: 8px 6px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.kma-daily-col-head.today {
+  background: #fff;
+  box-shadow: inset 0 3px 0 #0d9488;
+}
+
+.kma-date-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.kma-day-label {
+  margin-top: 2px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.kma-day-label.future {
+  color: #dc2626;
+}
+
+.kma-daily-cell-btn {
+  position: relative;
+  width: 100%;
+  min-height: 52px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.kma-daily-cell.today .kma-daily-cell-btn {
+  background: #fff;
+}
+
+.kma-daily-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: var(--muted);
+  background: rgba(248, 250, 252, 0.92);
+  z-index: 1;
+  transition: opacity 0.25s ease;
+}
+
+.kma-daily-cell.expanded .kma-daily-overlay {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.kma-period-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 100%;
+  min-height: 52px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.kma-period-grid.visible {
+  opacity: 1;
+}
+
+.kma-period-grid > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.74rem;
+  color: #334155;
+  border-right: 1px solid #eef2f7;
+  padding: 6px 2px;
+}
+
+.kma-period-grid > span:last-child {
+  border-right: none;
+}
+
+.kma-weather-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.kma-temp.am {
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.kma-temp.pm {
+  color: #dc2626;
+  font-weight: 700;
+}
+
 .day-label {
   font-size: 0.82rem;
   color: var(--muted);
