@@ -1,0 +1,12 @@
+---
+description: 세차해말아 프로젝트 커밋·배포 워크플로
+alwaysApply: true
+---
+
+# 배포 워크플로
+
+- 코드 변경 후 사용자가 별도로 말하지 않아도 **커밋이 완료되면 `origin/master`에 푸시**한다.
+- Vercel(프론트) + Railway(백엔드)가 자동 배포되므로, 푸시 후 프로덕션 URL로 확인하면 된다.
+- 프로덕션: https://sechahaemal-a.vercel.app
+- `.env.local` 등 비밀 파일은 커밋하지 않는다.
+- 사용자가 "커밋만" 또는 "푸시하지 마"라고 명시한 경우에만 푸시를 생략한다.

@@ -174,33 +174,27 @@ export default function HomePage() {
                 imageAlt="기상청 날씨누리"
               />
             </div>
-            <div className="day-tabs">
+            <div className="day-grid">
               {result.rain_forecast.days.map((day) => (
                 <button
                   key={day.date}
                   type="button"
-                  className={`day-tab rain${selectedRainDay === day.label ? " active" : ""}`}
+                  className={`day-card rain${selectedRainDay === day.label ? " expanded" : ""}`}
                   onClick={() =>
                     setSelectedRainDay((prev) => (prev === day.label ? null : day.label))
                   }
                   aria-expanded={selectedRainDay === day.label}
                 >
-                  {day.label}
+                  <div className="day-label">{day.label}</div>
+                  <div className="day-card-body">
+                    <div className="day-card-inner">
+                      <div className="day-value">{day.max_pop}%</div>
+                      <div className="day-sub">강수예보 · {day.risk_label}</div>
+                    </div>
+                  </div>
                 </button>
               ))}
             </div>
-            {selectedRainDay ? (
-              result.rain_forecast.days
-                .filter((day) => day.label === selectedRainDay)
-                .map((day) => (
-                  <div className="day-detail rain" key={day.date}>
-                    <div className="day-value">{day.max_pop}%</div>
-                    <div className="day-sub">강수예보 · {day.risk_label}</div>
-                  </div>
-                ))
-            ) : (
-              <p className="day-hint">오늘 · 내일 · 모레를 눌러 강수예보를 확인하세요</p>
-            )}
             <div className="summary-bar">
               <span>
                 3일 평균 <strong>{result.rain_forecast.three_day_avg_pop}%</strong>
@@ -217,35 +211,29 @@ export default function HomePage() {
               <div className="section-title">3일 초미세먼지 예보</div>
               <VerifyLink href={AIRKOREA_FORECAST_URL} label="에어코리아 예보" />
             </div>
-            <div className="day-tabs">
+            <div className="day-grid">
               {result.dust_forecast.days.map((day, index) => (
                 <button
                   key={`${day.label}-${index}`}
                   type="button"
-                  className={`day-tab dust${selectedDustDay === day.label ? " active" : ""}`}
+                  className={`day-card dust${selectedDustDay === day.label ? " expanded" : ""}`}
                   onClick={() =>
                     setSelectedDustDay((prev) => (prev === day.label ? null : day.label))
                   }
                   aria-expanded={selectedDustDay === day.label}
                 >
-                  {day.label}
+                  <div className="day-label">{day.label}</div>
+                  <div className="day-card-body">
+                    <div className="day-card-inner">
+                      <div className="day-value dust-grade">
+                        <DustGrade grade={day.grade} />
+                      </div>
+                      <div className="day-sub">PM2.5 예보</div>
+                    </div>
+                  </div>
                 </button>
               ))}
             </div>
-            {selectedDustDay ? (
-              result.dust_forecast.days
-                .filter((day) => day.label === selectedDustDay)
-                .map((day, index) => (
-                  <div className="day-detail dust" key={`${day.label}-detail-${index}`}>
-                    <div className="day-value dust-grade">
-                      <DustGrade grade={day.grade} />
-                    </div>
-                    <div className="day-sub">PM2.5 예보</div>
-                  </div>
-                ))
-            ) : (
-              <p className="day-hint">오늘 · 내일 · 모레를 눌러 초미세먼지 예보를 확인하세요</p>
-            )}
             <div className="summary-bar">
               <span>현재 {result.current_air.pm25_value} ㎍/㎥</span>
               <span>현재 {result.current_air.pm25_grade_label}</span>
