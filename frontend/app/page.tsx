@@ -3,7 +3,7 @@
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
 import { fetchAnalysis, getCurrentPosition, getLocationErrorMessage, LocationError } from "@/lib/api";
-import { OnboardingPopup } from "@/components/OnboardingPopup";
+import { OnboardingGuide } from "@/components/OnboardingGuide";
 import { shouldShowOnboarding } from "@/lib/onboarding";
 import { shareConclusion } from "@/lib/share";
 import type { AnalyzeResponse } from "@/lib/types";
@@ -82,8 +82,7 @@ export default function HomePage() {
   const [showLogicSection, setShowLogicSection] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [shareNoticeSource, setShareNoticeSource] = useState<"popup" | "logic" | null>(null);
-  const [onboardingMounted, setOnboardingMounted] = useState(false);
-  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [showOnboardingGuide, setShowOnboardingGuide] = useState(false);
 
   const openRainDay = (label: string) => {
     setExpandedRainDays((prev) => {
@@ -188,8 +187,7 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    setOnboardingMounted(true);
-    setOnboardingOpen(shouldShowOnboarding());
+    setShowOnboardingGuide(shouldShowOnboarding());
   }, []);
 
   useEffect(() => {
@@ -212,19 +210,11 @@ export default function HomePage() {
   }, [allForecastRevealed, conclusionDismissed]);
 
   useEffect(() => {
-    document.body.style.overflow = onboardingOpen || showConclusionPopup ? "hidden" : "";
+    document.body.style.overflow = showConclusionPopup ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [onboardingOpen, showConclusionPopup]);
-
-  if (!onboardingMounted) {
-    return null;
-  }
-
-  if (onboardingOpen) {
-    return <OnboardingPopup onClose={() => setOnboardingOpen(false)} />;
-  }
+  }, [showConclusionPopup]);
 
   if (status === "loading") {
     return (
@@ -257,10 +247,10 @@ export default function HomePage() {
             </svg>
             Google 계정으로 로그인
           </button>
-          <p className="footer" style={{ marginTop: 16 }}>
-            로그인이 안 되면 frontend/.env.local 에 Google Client ID/Secret을 입력했는지 확인하세요.
-          </p>
         </section>
+        {showOnboardingGuide && (
+          <OnboardingGuide onClose={() => setShowOnboardingGuide(false)} />
+        )}
       </main>
     );
   }
