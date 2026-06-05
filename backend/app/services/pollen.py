@@ -53,11 +53,21 @@ def season_note(month: int) -> str:
 def resolve_pollen_issue_times(now: datetime) -> list[str]:
     today = now.strftime("%Y%m%d")
     yesterday = (now - timedelta(days=1)).strftime("%Y%m%d")
+    candidates = [now.strftime("%Y%m%d%H")]
     if now.hour >= 18:
-        return [f"{today}18", f"{today}06", f"{yesterday}18"]
-    if now.hour >= 6:
-        return [f"{today}06", f"{yesterday}18", f"{yesterday}06"]
-    return [f"{yesterday}18", f"{yesterday}06"]
+        candidates.extend([f"{today}18", f"{today}06", f"{yesterday}18"])
+    elif now.hour >= 6:
+        candidates.extend([f"{today}06", f"{yesterday}18", f"{yesterday}06"])
+    else:
+        candidates.extend([f"{yesterday}18", f"{yesterday}06"])
+
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for value in candidates:
+        if value not in seen:
+            seen.add(value)
+            ordered.append(value)
+    return ordered
 
 
 def _parse_grade(value) -> int | None:
@@ -89,8 +99,10 @@ async def _fetch_species_pollen(species: str, area_no: str, issue_times: list[st
         except httpx.HTTPStatusError as exc:
             if exc.response.status_code in {403, 404}:
                 raise RuntimeError(
-                    "꽃가루 API 미연동입니다. 공공데이터포털에서 "
-                    "'기상청_꽃가루농도위험지수 조회서비스(3.0)' 활용신청이 필요합니다."
+                    "꽃가루 API 권한이 아직 반영되지 않았습니다. 공공데이터포털 "
+                    "'기상청_꽃가루농도위험지수 조회서비스(3.0)' 활용(운영) 승인 후 "
+                    "Railway의 PUBLIC_DATA_API_KEY가 동일 Encoding 키인지 확인해 주세요. "
+                    "승인 직후에는 10~30분 정도 걸릴 수 있습니다."
                 ) from exc
             logger.warning("꽃가루 API HTTP 오류(%s, %s): %s", species, issue_time, exc)
             continue

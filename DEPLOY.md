@@ -37,7 +37,7 @@ GitHub 저장소: https://github.com/clover772002/sechahaemal-a
 
 | Key | Value |
 |-----|-------|
-| `PUBLIC_DATA_API_KEY` | 공공데이터 Encoding 키 |
+| `PUBLIC_DATA_API_KEY` | 공공데이터 Encoding 키 (단기예보·에어코리아·**꽃가루농도위험지수** 활용 승인된 동일 키) |
 | `CORS_ORIGINS` | `https://YOUR-APP.vercel.app` (프론트 배포 후 입력) |
 
 5. **Settings** → **Networking** → **Generate Domain** 클릭
