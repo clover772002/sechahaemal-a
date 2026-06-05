@@ -26,6 +26,7 @@ export interface ForecastMeta {
   nx: number;
   ny: number;
   source: string;
+  pop_rule?: string;
 }
 
 export interface RainDay {

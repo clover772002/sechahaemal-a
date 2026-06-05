@@ -8,8 +8,8 @@ logger = logging.getLogger(__name__)
 
 FORECAST_BASE_TIMES = ["0200", "0500", "0800", "1100", "1400", "1700", "2000", "2300"]
 AM_SLOT_TIME = "0600"
-AM_POP_TIME = "0900"
 PM_SLOT_TIME = "1800"
+POP_RULE = "시간별 강수확률 구간 최대값"
 AM_TMP_TIMES = ("0400", "0500", "0600", "0700", "0800", "0900")
 PM_TMP_TIMES = ("1000", "1100", "1200", "1300", "1400", "1500", "1600", "1700", "1800")
 
@@ -293,9 +293,7 @@ def _summarize_period(
 ) -> dict:
     now = datetime.now()
     sky_time = AM_SLOT_TIME if period == "am" else PM_SLOT_TIME
-    pop_time = AM_POP_TIME if period == "am" else PM_SLOT_TIME
     sky_slot = slots.get((date, sky_time))
-    pop_slot = slots.get((date, pop_time))
     period_hours = _period_slot_hours(slots, date, period)
     tmp = _period_tmp(slots, daily_meta, date, period, is_today=is_today)
 
@@ -306,17 +304,10 @@ def _summarize_period(
             "tmp_display": "-" if tmp is None else f"{tmp}°C",
         }
 
-    if not period_hours and sky_slot is None and pop_slot is None and tmp is None:
+    if not period_hours and sky_slot is None and tmp is None:
         return _empty_period()
 
-    period_max_pop = max((hour["pop"] for hour in period_hours), default=0)
-    anchor_pop = pop_slot["pop"] if pop_slot else 0
-    if period_max_pop >= 40:
-        pop_value = period_max_pop
-    elif pop_slot:
-        pop_value = anchor_pop
-    else:
-        pop_value = period_max_pop
+    pop_value = max((hour["pop"] for hour in period_hours), default=0)
     pop, pop_display = _pop_display(pop_value)
 
     representative = sky_slot or (
@@ -352,7 +343,7 @@ def build_kma_daily_forecast(
     slots: dict[tuple[str, str], dict],
     daily_meta: dict[str, dict[str, int]],
 ) -> list[dict]:
-    """기상청 일별 예보와 동일한 슬롯(06시/18시 POP·SKY, TMN/TMX)으로 구성합니다."""
+    """단기예보 시간별 데이터를 오전/오후 일별 표로 요약합니다."""
     target_dates = [
         (datetime.now() + timedelta(days=i)).strftime("%Y%m%d") for i in range(3)
     ]
@@ -422,7 +413,7 @@ def summarize_rain_forecast(
     return {
         "days": days,
         "kma_daily": kma_daily,
-        "forecast_meta": dict(forecast_meta or {}),
+        "forecast_meta": {**(forecast_meta or {}), "pop_rule": POP_RULE},
         "three_day_max_pop": max(max_values) if max_values else 0,
         "three_day_avg_pop": round(sum(max_values) / len(max_values)) if max_values else 0,
         "rainy_day_count": sum(1 for d in days if d["max_pop"] >= 40 or d["has_rain"]),

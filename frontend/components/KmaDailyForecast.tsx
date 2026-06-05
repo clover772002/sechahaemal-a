@@ -70,7 +70,7 @@ export default function KmaDailyForecast({
     { key: "time", label: "시각" },
     { key: "weather", label: "날씨" },
     { key: "temp", label: "기온" },
-    { key: "pop", label: "강수확률" },
+    { key: "pop", label: "강수예보" },
   ];
 
   return (
@@ -81,6 +81,12 @@ export default function KmaDailyForecast({
           <div className="kma-daily-meta">
             기상청 단기예보 · 격자 {forecastMeta.nx},{forecastMeta.ny} · 발표{" "}
             {forecastMeta.base_datetime}
+            {forecastMeta.pop_rule && (
+              <>
+                <br />
+                강수예보: {forecastMeta.pop_rule}
+              </>
+            )}
           </div>
         )}
       </div>
