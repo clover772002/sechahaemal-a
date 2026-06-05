@@ -111,22 +111,27 @@ export default function HomePage() {
     });
   };
 
-  const handleShareConclusion = async () => {
+  const handleShareConclusion = async (source: "popup" | "logic") => {
     if (!result) return;
 
     try {
       const outcome = await shareConclusion(result);
       if (outcome === "cancelled") return;
+      setShareNoticeSource(source);
       if (outcome === "copied") {
         setShareNotice("복사됐어요. 카톡·문자·메일에 붙여넣기 하세요.");
       } else {
         setShareNotice("공유 창에서 앱을 골라 보내세요.");
       }
     } catch {
+      setShareNoticeSource(source);
       setShareNotice("공유에 실패했어요. 잠시 후 다시 시도해 주세요.");
     }
 
-    window.setTimeout(() => setShareNotice(null), 2800);
+    window.setTimeout(() => {
+      setShareNotice(null);
+      setShareNoticeSource(null);
+    }, 2800);
   };
 
   const loadAnalysis = useCallback(async () => {
@@ -144,6 +149,8 @@ export default function HomePage() {
       setConclusionDismissed(false);
       setConclusionReady(false);
       setShowLogicSection(false);
+      setShareNotice(null);
+      setShareNoticeSource(null);
     } catch (err) {
       setResult(null);
       const isLocationError =
@@ -485,6 +492,13 @@ export default function HomePage() {
                 </ul>
               </>
             )}
+
+            <div className="logic-share-wrap">
+              <ShareConclusionButton onClick={() => handleShareConclusion("logic")} />
+              {shareNotice && shareNoticeSource === "logic" && (
+                <p className="conclusion-share-notice">{shareNotice}</p>
+              )}
+            </div>
           </section>
           )}
         </>
@@ -501,18 +515,10 @@ export default function HomePage() {
             <p className="conclusion-score">종합 점수 {result.decision.score}점</p>
             <div className="conclusion-actions">
               <div className="conclusion-share-wrap">
-                <button type="button" className="conclusion-share-btn" onClick={handleShareConclusion}>
-                  <svg
-                    className="conclusion-share-icon"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path d="M22 2 11 13" />
-                    <path d="M22 2 15 22 11 13 2 9 22 2Z" />
-                  </svg>
-                  <span>공유하기</span>
-                </button>
-                {shareNotice && <p className="conclusion-share-notice">{shareNotice}</p>}
+                <ShareConclusionButton onClick={() => handleShareConclusion("popup")} />
+                {shareNotice && shareNoticeSource === "popup" && (
+                  <p className="conclusion-share-notice">{shareNotice}</p>
+                )}
               </div>
               <button type="button" className="conclusion-logic-link" onClick={openLogicSection}>
                 점수 로직이 궁금하다면?
