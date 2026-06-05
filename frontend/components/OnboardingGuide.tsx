@@ -6,8 +6,8 @@ export function OnboardingGuide() {
           오늘 세차, 해도 될까?
         </h2>
         <p className="onboarding-sub">
-          내 위치 기준 <strong>3일 강수확률·초미세먼지·꽃가루</strong> 예보를 보고,{" "}
-          <strong>지금 세차할지 미룰지</strong> 빠르게 판단해 드립니다.
+          내 위치 기준 3일 강수확률·초미세먼지·꽃가루 예보를 보고, 지금 세차할지 미룰지 빠르게
+          판단해 드립니다.
         </p>
       </header>
 
