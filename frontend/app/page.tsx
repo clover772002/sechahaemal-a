@@ -51,8 +51,26 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsLocation, setNeedsLocation] = useState(false);
-  const [selectedRainDay, setSelectedRainDay] = useState<string | null>(null);
-  const [selectedDustDay, setSelectedDustDay] = useState<string | null>(null);
+  const [expandedRainDays, setExpandedRainDays] = useState<Set<string>>(() => new Set());
+  const [expandedDustDays, setExpandedDustDays] = useState<Set<string>>(() => new Set());
+
+  const openRainDay = (label: string) => {
+    setExpandedRainDays((prev) => {
+      if (prev.has(label)) return prev;
+      const next = new Set(prev);
+      next.add(label);
+      return next;
+    });
+  };
+
+  const openDustDay = (label: string) => {
+    setExpandedDustDays((prev) => {
+      if (prev.has(label)) return prev;
+      const next = new Set(prev);
+      next.add(label);
+      return next;
+    });
+  };
 
   const loadAnalysis = useCallback(async () => {
     setLoading(true);
@@ -64,8 +82,8 @@ export default function HomePage() {
         position.coords.longitude,
       );
       setResult(data);
-      setSelectedRainDay(null);
-      setSelectedDustDay(null);
+      setExpandedRainDays(new Set());
+      setExpandedDustDays(new Set());
     } catch (err) {
       setResult(null);
       const isLocationError =
@@ -179,11 +197,9 @@ export default function HomePage() {
                 <button
                   key={day.date}
                   type="button"
-                  className={`day-card rain${selectedRainDay === day.label ? " expanded" : ""}`}
-                  onClick={() =>
-                    setSelectedRainDay((prev) => (prev === day.label ? null : day.label))
-                  }
-                  aria-expanded={selectedRainDay === day.label}
+                  className={`day-card rain${expandedRainDays.has(day.label) ? " expanded" : ""}`}
+                  onClick={() => openRainDay(day.label)}
+                  aria-expanded={expandedRainDays.has(day.label)}
                 >
                   <div className="day-label">{day.label}</div>
                   <div className="day-card-body">
@@ -216,11 +232,9 @@ export default function HomePage() {
                 <button
                   key={`${day.label}-${index}`}
                   type="button"
-                  className={`day-card dust${selectedDustDay === day.label ? " expanded" : ""}`}
-                  onClick={() =>
-                    setSelectedDustDay((prev) => (prev === day.label ? null : day.label))
-                  }
-                  aria-expanded={selectedDustDay === day.label}
+                  className={`day-card dust${expandedDustDays.has(day.label) ? " expanded" : ""}`}
+                  onClick={() => openDustDay(day.label)}
+                  aria-expanded={expandedDustDays.has(day.label)}
                 >
                   <div className="day-label">{day.label}</div>
                   <div className="day-card-body">
