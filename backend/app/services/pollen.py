@@ -160,7 +160,7 @@ async def fetch_pollen_forecast(region: str) -> dict:
                 "data_time": None,
                 "source": "기상청 꽃가루농도위험지수(HealthWthrIdxServiceV3)",
                 "season_note": season_note(month),
-                "verify_hint": "날씨누리 → 테마날씨 → 생활기상정보 → 보건기상지수 → 꽃가루농도위험지수",
+                "verify_hint": "날씨누리 공항·산악·생활 → 생활기상지수(꽃가루) → 지역별 오늘·내일·모레",
             },
         }
 
@@ -196,7 +196,7 @@ async def fetch_pollen_forecast(region: str) -> dict:
                 "data_time": None,
                 "source": "기상청 꽃가루농도위험지수(HealthWthrIdxServiceV3)",
                 "season_note": season_note(month),
-                "verify_hint": "날씨누리 → 테마날씨 → 생활기상정보 → 보건기상지수 → 꽃가루농도위험지수",
+                "verify_hint": "날씨누리 공항·산악·생활 → 생활기상지수(꽃가루) → 지역별 오늘·내일·모레",
             },
         }
 
@@ -214,7 +214,7 @@ async def fetch_pollen_forecast(region: str) -> dict:
                 "data_time": issue_time,
                 "source": "기상청 꽃가루농도위험지수(HealthWthrIdxServiceV3)",
                 "season_note": season_note(month),
-                "verify_hint": "날씨누리 → 테마날씨 → 생활기상정보 → 보건기상지수 → 꽃가루농도위험지수",
+                "verify_hint": "날씨누리 공항·산악·생활 → 생활기상지수(꽃가루) → 지역별 오늘·내일·모레",
             },
         }
 
@@ -258,6 +258,6 @@ async def fetch_pollen_forecast(region: str) -> dict:
             "data_time": issue_time,
             "source": "기상청 꽃가루농도위험지수(HealthWthrIdxServiceV3)",
             "season_note": season_note(month),
-            "verify_hint": "날씨누리 → 테마날씨 → 생활기상정보 → 보건기상지수 → 꽃가루농도위험지수",
+            "verify_hint": "날씨누리 공항·산악·생활 → 생활기상지수(꽃가루) → 지역별 오늘·내일·모레",
         },
     }

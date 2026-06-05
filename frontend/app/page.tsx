@@ -8,7 +8,7 @@ import type { AnalyzeResponse } from "@/lib/types";
 
 const KMA_WEATHER_URL = "https://www.weather.go.kr/w/index.do";
 const AIRKOREA_FORECAST_URL = "https://www.airkorea.or.kr/web/dustForecast?pMENU_NO=113";
-const KMA_POLLEN_URL = "https://www.weather.go.kr/w/theme/daily-life/health-weather-index.do";
+const KMA_POLLEN_URL = "https://www.weather.go.kr/w/forecast/life.do";
 const CONCLUSION_POPUP_DELAY_MS = 1100;
 
 function DustGrade({ grade }: { grade: number }) {
@@ -402,7 +402,7 @@ export default function HomePage() {
           <section className="card">
             <div className="section-head">
               <div className="section-title">3일 꽃가루 예보</div>
-              <VerifyLink href={KMA_POLLEN_URL} label="기상청 보건기상" />
+              <VerifyLink href={KMA_POLLEN_URL} label="날씨누리 생활" />
             </div>
             <div className="forecast-verify-meta">
               <div>
