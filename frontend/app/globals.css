@@ -136,6 +136,7 @@ main {
   justify-content: flex-end;
 }
 
+.forecast-verify-meta,
 .dust-verify-meta {
   margin-bottom: 12px;
   font-size: 0.76rem;
@@ -147,6 +148,11 @@ main {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+}
+
+button.day-card {
+  appearance: none;
+  color: inherit;
 }
 
 .day-card {
@@ -171,19 +177,14 @@ main {
   transform: scale(0.98);
 }
 
-.day-card.rain {
-  background: linear-gradient(180deg, #eff6ff, #ffffff);
-}
-
+.day-card.forecast,
+.day-card.rain,
 .day-card.dust {
   background: linear-gradient(180deg, #f5f3ff, #ffffff);
 }
 
-.day-card.rain.expanded {
-  border-color: #93c5fd;
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.14);
-}
-
+.day-card.forecast.expanded,
+.day-card.rain.expanded,
 .day-card.dust.expanded {
   border-color: #c4b5fd;
   box-shadow: 0 4px 14px rgba(139, 92, 246, 0.14);
@@ -229,8 +230,11 @@ main {
   margin-top: 6px;
 }
 
+.day-card .day-value.forecast-grade,
 .day-card .day-value.dust-grade {
   font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1.1;
 }
 
 .kma-daily {
@@ -407,7 +411,7 @@ main {
 }
 
 .day-value {
-  font-size: 1.7rem;
+  font-size: 1.2rem;
   font-weight: 800;
   line-height: 1.1;
 }
