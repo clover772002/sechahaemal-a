@@ -234,7 +234,7 @@ export default function HomePage() {
       <main>
         <section className="brand">
           <h1>오늘 세차 할까?</h1>
-          <p>날씨와 미세먼지로 알려드려요</p>
+          <p>날씨 분석하고 알려드려요</p>
         </section>
         <section className="card login-card">
           <h2>Google로 시작하기</h2>
@@ -316,7 +316,7 @@ export default function HomePage() {
             <div className="section-head">
               <div className="section-title">3일 강수예보</div>
               <div className="verify-links">
-                <VerifyLink href={KMA_WEATHER_URL} label="기상청 날씨누리" />
+                <VerifyLink href={KMA_WEATHER_URL} label="기상청" />
               </div>
             </div>
             <div className="forecast-verify-meta">
@@ -416,7 +416,7 @@ export default function HomePage() {
           <section className="card">
             <div className="section-head">
               <div className="section-title">3일 꽃가루 예보</div>
-              <VerifyLink href={KMA_POLLEN_URL} label="날씨누리 생활" />
+              <VerifyLink href={KMA_POLLEN_URL} label="기상청" />
             </div>
             <div className="forecast-verify-meta">
               <div>
