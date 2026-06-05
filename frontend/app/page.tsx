@@ -8,11 +8,17 @@ import type { AnalyzeResponse } from "@/lib/types";
 
 const KMA_WEATHER_URL = "https://www.weather.go.kr/w/index.do";
 const AIRKOREA_FORECAST_URL = "https://www.airkorea.or.kr/web/dustForecast?pMENU_NO=113";
+const KMA_POLLEN_URL = "https://www.weather.go.kr/w/theme/daily-life/health-weather-index.do";
 const CONCLUSION_POPUP_DELAY_MS = 1100;
 
 function DustGrade({ grade }: { grade: number }) {
   const labels = ["", "좋음", "보통", "나쁨", "매우나쁨"];
   return <>{labels[grade] ?? "보통"}</>;
+}
+
+function PollenGrade({ grade }: { grade: number }) {
+  const labels = ["낮음", "보통", "높음", "매우높음"];
+  return <>{labels[grade] ?? "낮음"}</>;
 }
 
 function SignalIndicator({ signal }: { signal: "green" | "yellow" | "red" }) {
@@ -68,6 +74,7 @@ export default function HomePage() {
   const [needsLocation, setNeedsLocation] = useState(false);
   const [expandedRainDays, setExpandedRainDays] = useState<Set<string>>(() => new Set());
   const [expandedDustDays, setExpandedDustDays] = useState<Set<string>>(() => new Set());
+  const [expandedPollenDays, setExpandedPollenDays] = useState<Set<string>>(() => new Set());
   const [conclusionDismissed, setConclusionDismissed] = useState(false);
   const [conclusionReady, setConclusionReady] = useState(false);
   const [showLogicSection, setShowLogicSection] = useState(false);
@@ -92,9 +99,22 @@ export default function HomePage() {
     });
   };
 
+  const openPollenDay = (label: string) => {
+    setExpandedPollenDays((prev) => {
+      if (prev.has(label)) return prev;
+      const next = new Set(prev);
+      next.add(label);
+      return next;
+    });
+  };
+
+  const pollenClickRequired = Boolean(
+    result?.pollen_forecast.available && result.pollen_forecast.days.length >= 3,
+  );
   const allRainDaysRevealed = expandedRainDays.size >= 3;
   const allDustDaysRevealed = expandedDustDays.size >= 3;
-  const allForecastRevealed = allRainDaysRevealed && allDustDaysRevealed;
+  const allPollenDaysRevealed = !pollenClickRequired || expandedPollenDays.size >= 3;
+  const allForecastRevealed = allRainDaysRevealed && allDustDaysRevealed && allPollenDaysRevealed;
   const showConclusionPopup = conclusionReady && !conclusionDismissed;
 
   const closeConclusionPopup = () => {
@@ -145,6 +165,7 @@ export default function HomePage() {
       setResult(data);
       setExpandedRainDays(new Set());
       setExpandedDustDays(new Set());
+      setExpandedPollenDays(new Set());
       setConclusionDismissed(false);
       setConclusionReady(false);
       setShowLogicSection(false);
@@ -378,6 +399,73 @@ export default function HomePage() {
             )}
           </section>
 
+          <section className="card">
+            <div className="section-head">
+              <div className="section-title">3일 꽃가루 예보</div>
+              <VerifyLink href={KMA_POLLEN_URL} label="기상청 보건기상" />
+            </div>
+            <div className="forecast-verify-meta">
+              <div>
+                {result.pollen_forecast.forecast_meta.source}
+                {result.pollen_forecast.forecast_meta.data_time && (
+                  <> · 발표 {result.pollen_forecast.forecast_meta.data_time}</>
+                )}
+              </div>
+              <div>{result.pollen_forecast.forecast_meta.season_note}</div>
+              <div>예보 대조: {result.pollen_forecast.forecast_meta.verify_hint}</div>
+            </div>
+            {result.pollen_forecast.available ? (
+              <>
+                <div className="day-grid">
+                  {result.pollen_forecast.days.map((day, index) => (
+                    <button
+                      key={`${day.label}-${index}`}
+                      type="button"
+                      className={`day-card forecast${expandedPollenDays.has(day.label) ? " expanded" : ""}`}
+                      onClick={() => openPollenDay(day.label)}
+                      aria-expanded={expandedPollenDays.has(day.label)}
+                    >
+                      <div className="day-label">{day.label}</div>
+                      <div className="day-card-content-zone">
+                        {!expandedPollenDays.has(day.label) && (
+                          <span className="day-card-hint">클릭</span>
+                        )}
+                        <div className="day-card-body">
+                          <div className="day-card-inner">
+                            <div className="day-value forecast-grade">
+                              <PollenGrade grade={day.grade} />
+                            </div>
+                            <div className="day-sub">
+                              {day.active_species_labels.length > 0
+                                ? day.active_species_labels.join("·")
+                                : "꽃가루 예보"}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                {allPollenDaysRevealed && result.pollen_forecast.three_day_worst_grade !== null && (
+                  <div className="summary-bar revealed">
+                    <span>
+                      3일 최악{" "}
+                      <PollenGrade grade={result.pollen_forecast.three_day_worst_grade} />
+                    </span>
+                    <span>{result.pollen_forecast.forecast_meta.region} 권역</span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="pollen-unavailable">
+                {result.pollen_forecast.in_season
+                  ? result.pollen_forecast.unavailable_reason ??
+                    "꽃가루 예보를 불러오지 못했습니다."
+                  : result.pollen_forecast.forecast_meta.season_note}
+              </p>
+            )}
+          </section>
+
           {showLogicSection && (
           <section id="decision-logic" className="card decision-logic-card revealed-block">
             <div className="section-title" style={{ marginBottom: 12 }}>
@@ -430,6 +518,31 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            <div className="logic-block">
+              <div className="logic-block-title">
+                꽃가루 (기상청 꽃가루농도위험지수 · {result.decision.logic.pollen.region})
+              </div>
+              {result.decision.logic.pollen.available ? (
+                <>
+                  <ul className="logic-list">
+                    <li>3일 최악 등급: {result.decision.logic.pollen.three_day_worst_label}</li>
+                    <li>{result.decision.logic.pollen.season_note}</li>
+                  </ul>
+                  <div className="logic-day-table">
+                    {result.decision.logic.pollen.days.map((day) => (
+                      <div key={day.label} className="logic-day-row logic-day-row--compact">
+                        <span>{day.label}</span>
+                        <span>{day.grade_label}</span>
+                        <span>{day.active_species_labels.join("·") || "-"}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="logic-note">{result.decision.logic.pollen.season_note}</p>
+              )}
             </div>
 
             <h3 className="logic-subtitle">2. 점수 계산</h3>
@@ -526,7 +639,8 @@ export default function HomePage() {
       )}
 
       <p className="footer">
-        데이터: 기상청 단기예보 · 에어코리아 대기오염/예보 (공공데이터포털)
+        데이터: 기상청 단기예보 · 에어코리아 대기오염/예보 · 기상청 꽃가루농도위험지수
+        (공공데이터포털)
       </p>
       <p className="footer-contact">
         문의사항 :{" "}

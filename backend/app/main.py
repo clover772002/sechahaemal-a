@@ -7,6 +7,7 @@ from app.config import settings
 from app.services.air_quality import fetch_air_quality, fetch_dust_forecast
 from app.services.coordinates import detect_airkorea_region, find_nearest_station, lat_lng_to_grid
 from app.services.decision import evaluate_car_wash
+from app.services.pollen import fetch_pollen_forecast
 from app.services.weather import (
     enrich_today_slots,
     fetch_weather_forecast,
@@ -84,7 +85,8 @@ async def analyze_location(
                 "unavailable_reason": str(exc),
             }
         dust_forecast["forecast_meta"]["current_data_time"] = current_air.get("data_time")
-        decision = evaluate_car_wash(rain_summary, dust_forecast)
+        pollen_forecast = await fetch_pollen_forecast(region)
+        decision = evaluate_car_wash(rain_summary, dust_forecast, pollen_forecast)
     except ValueError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     except RuntimeError as exc:
@@ -106,6 +108,7 @@ async def analyze_location(
         },
         "rain_forecast": rain_summary,
         "dust_forecast": dust_forecast,
+        "pollen_forecast": pollen_forecast,
         "current_air": current_air,
         "decision": decision,
     }

@@ -5,11 +5,12 @@ TRAFFIC_LABELS = {
 }
 
 DUST_LABELS = {1: "좋음", 2: "보통", 3: "나쁨", 4: "매우나쁨"}
+POLLEN_LABELS = {0: "낮음", 1: "보통", 2: "높음", 3: "매우높음"}
 
 RAINY_DAY_RULE = "해당 일자 최대 강수확률 40% 이상 또는 강수 형태(비·눈 등) 예보"
 
 
-def evaluate_car_wash(rain_summary: dict, dust_forecast: dict) -> dict:
+def evaluate_car_wash(rain_summary: dict, dust_forecast: dict, pollen_forecast: dict | None = None) -> dict:
     score = 100
     reasons: list[str] = []
     steps: list[dict] = []
@@ -18,8 +19,12 @@ def evaluate_car_wash(rain_summary: dict, dust_forecast: dict) -> dict:
     max_pop = rain_summary["three_day_max_pop"]
     avg_pop = rain_summary["three_day_avg_pop"]
     worst_dust = dust_forecast["three_day_worst_grade"]
+    pollen_forecast = pollen_forecast or {}
+    pollen_available = pollen_forecast.get("available", False)
+    worst_pollen = pollen_forecast.get("three_day_worst_grade")
     pop_rule = rain_summary.get("forecast_meta", {}).get("pop_rule", "일자별 시간별 강수확률 최대값")
     dust_region = dust_forecast.get("region", "")
+    pollen_region = pollen_forecast.get("region", "")
 
     def apply(rule: str, delta: int, condition: bool, reason: str | None = None) -> None:
         nonlocal score
@@ -79,6 +84,25 @@ def evaluate_car_wash(rain_summary: dict, dust_forecast: dict) -> dict:
         worst_dust <= 2,
         "초미세먼지 예보가 양호합니다.",
     )
+    if pollen_available and worst_pollen is not None:
+        apply(
+            f"꽃가루 예보 '매우높음' (−15점)",
+            -15,
+            worst_pollen >= 3,
+            "꽃가루 위험지수가 매우 높습니다.",
+        )
+        apply(
+            f"꽃가루 예보 '높음' (−10점)",
+            -10,
+            worst_pollen == 2,
+            "꽃가루 위험지수가 높습니다.",
+        )
+        apply(
+            f"꽃가루 예보 '보통' 이하 (+3점)",
+            +3,
+            worst_pollen <= 1,
+            "꽃가루 위험지수가 낮습니다.",
+        )
 
     score = max(0, min(100, score))
 
@@ -104,6 +128,26 @@ def evaluate_car_wash(rain_summary: dict, dust_forecast: dict) -> dict:
         for d in dust_forecast.get("days", [])
     ]
 
+    pollen_days_detail = [
+        {
+            "label": d["label"],
+            "grade": d["grade"],
+            "grade_label": d["grade_label"],
+            "active_species_labels": d.get("active_species_labels", []),
+        }
+        for d in pollen_forecast.get("days", [])
+    ]
+
+    overview_parts = [
+        "강수(기상청 단기예보)와 초미세먼지(에어코리아 PM2.5 권역 예보)",
+    ]
+    if pollen_available:
+        overview_parts.append("꽃가루(기상청 꽃가루농도위험지수)")
+    overview_parts.append(
+        "를 각각 점수로 환산한 뒤 합산해 신호등을 정합니다. "
+        "현재 초미세먼지 실측값은 참고용이며 판정에는 쓰지 않습니다."
+    )
+
     return {
         "score": score,
         "signal": signal,
@@ -111,11 +155,7 @@ def evaluate_car_wash(rain_summary: dict, dust_forecast: dict) -> dict:
         "summary": TRAFFIC_LABELS[signal],
         "reasons": reasons,
         "logic": {
-            "overview": (
-                "강수(기상청 단기예보)와 초미세먼지(에어코리아 PM2.5 권역 예보)를 "
-                "각각 점수로 환산한 뒤 합산해 신호등을 정합니다. "
-                "현재 초미세먼지 실측값은 참고용이며 판정에는 쓰지 않습니다."
-            ),
+            "overview": "".join(overview_parts),
             "rain": {
                 "source": "기상청 단기예보(getVilageFcst)",
                 "pop_rule": pop_rule,
@@ -132,6 +172,20 @@ def evaluate_car_wash(rain_summary: dict, dust_forecast: dict) -> dict:
                 "three_day_worst_label": DUST_LABELS.get(worst_dust, "보통"),
                 "three_day_avg_grade": dust_forecast.get("three_day_avg_grade"),
                 "days": dust_days_detail,
+            },
+            "pollen": {
+                "source": pollen_forecast.get("forecast_meta", {}).get(
+                    "source", "기상청 꽃가루농도위험지수"
+                ),
+                "region": pollen_region,
+                "available": pollen_available,
+                "in_season": pollen_forecast.get("in_season", False),
+                "three_day_worst_grade": worst_pollen,
+                "three_day_worst_label": POLLEN_LABELS.get(worst_pollen, None)
+                if worst_pollen is not None
+                else None,
+                "season_note": pollen_forecast.get("forecast_meta", {}).get("season_note"),
+                "days": pollen_days_detail,
             },
             "scoring": {
                 "start": 100,

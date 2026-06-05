@@ -57,6 +57,22 @@ export interface DustDay {
   data_time: string | null;
 }
 
+export interface PollenForecastMeta {
+  region: string;
+  area_no: string;
+  data_time: string | null;
+  source: string;
+  season_note: string;
+  verify_hint: string;
+}
+
+export interface PollenDay {
+  label: string;
+  grade: number;
+  grade_label: string;
+  active_species_labels: string[];
+}
+
 export interface DecisionScoreStep {
   rule: string;
   delta: number;
@@ -86,6 +102,21 @@ export interface DecisionLogic {
     three_day_worst_label: string;
     three_day_avg_grade: number;
     days: Array<{ label: string; grade: number; grade_label: string }>;
+  };
+  pollen: {
+    source: string;
+    region: string;
+    available: boolean;
+    in_season: boolean;
+    three_day_worst_grade: number | null;
+    three_day_worst_label: string | null;
+    season_note?: string;
+    days: Array<{
+      label: string;
+      grade: number;
+      grade_label: string;
+      active_species_labels: string[];
+    }>;
   };
   scoring: {
     start: number;
@@ -133,6 +164,15 @@ export interface AnalyzeResponse {
     three_day_worst_grade: number;
     region: string;
     forecast_meta: DustForecastMeta;
+  };
+  pollen_forecast: {
+    days: PollenDay[];
+    three_day_worst_grade: number | null;
+    available: boolean;
+    in_season: boolean;
+    unavailable_reason?: string;
+    region: string;
+    forecast_meta: PollenForecastMeta;
   };
   current_air: {
     data_time?: string | null;

@@ -871,3 +871,11 @@ button.day-card {
 .footer-contact a:hover {
   text-decoration: underline;
 }
+
+.pollen-unavailable {
+  margin: 8px 0 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}

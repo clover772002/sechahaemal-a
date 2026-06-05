@@ -105,6 +105,31 @@ def detect_region(lat: float, lng: float) -> str:
     return "서울"
 
 
+REGION_TO_POLLEN_AREA_NO: dict[str, str] = {
+    "서울": "1100000000",
+    "부산": "2600000000",
+    "대구": "2700000000",
+    "인천": "2800000000",
+    "광주": "2900000000",
+    "대전": "3000000000",
+    "울산": "3100000000",
+    "세종": "3600000000",
+    "경기": "4100000000",
+    "강원": "4200000000",
+    "충북": "4300000000",
+    "충남": "4400000000",
+    "전북": "4500000000",
+    "전남": "4600000000",
+    "경북": "4700000000",
+    "경남": "4800000000",
+    "제주": "5000000000",
+}
+
+
+def detect_pollen_area_no(region: str) -> str:
+    return REGION_TO_POLLEN_AREA_NO.get(region, "1100000000")
+
+
 def detect_airkorea_region(lat: float, lng: float, base_region: str) -> str:
     """에어코리아 미세먼지 예보 표의 열 이름에 맞게 권역을 세분화합니다."""
     if base_region == "경기":
