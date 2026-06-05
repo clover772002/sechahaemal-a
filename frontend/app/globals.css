@@ -879,3 +879,145 @@ button.day-card {
   font-size: 0.82rem;
   line-height: 1.5;
 }
+
+.onboarding-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #f5f3ff 0%, #ffffff 42%, #f8fafc 100%);
+  color: var(--text);
+}
+
+.onboarding-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 22px 16px;
+  max-width: 520px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.onboarding-header {
+  margin-bottom: 22px;
+}
+
+.onboarding-title {
+  margin: 0 0 12px;
+  font-size: 1.65rem;
+  line-height: 1.3;
+  letter-spacing: -0.03em;
+}
+
+.onboarding-sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.94rem;
+  line-height: 1.65;
+}
+
+.onboarding-sub strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.onboarding-section {
+  margin-bottom: 22px;
+}
+
+.onboarding-section-title {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  line-height: 1.4;
+}
+
+.onboarding-section-title span {
+  color: #6d28d9;
+}
+
+.onboarding-lead {
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+.onboarding-lead-sub {
+  margin: 0 0 10px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.onboarding-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: #334155;
+}
+
+.onboarding-list strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.onboarding-disclaimer {
+  margin: 4px 0 0;
+  font-size: 0.74rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.onboarding-footer {
+  flex-shrink: 0;
+  padding: 14px 22px calc(14px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 520px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.onboarding-skip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.onboarding-skip input {
+  width: 16px;
+  height: 16px;
+  accent-color: #7c3aed;
+}
+
+.onboarding-close-btn {
+  width: 100%;
+  max-width: 280px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #7c3aed, #6d28d9);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(109, 40, 217, 0.28);
+}
+
+.onboarding-close-btn:active {
+  transform: scale(0.98);
+}
