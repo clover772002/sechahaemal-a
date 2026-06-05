@@ -753,6 +753,14 @@ button.day-card {
   font-size: 0.82rem;
 }
 
+.logic-score-row--skipped {
+  color: #b8c2ce;
+}
+
+.logic-score-row--skipped .logic-score-status {
+  color: #c5cdd8;
+}
+
 .logic-score-row--applied {
   background: color-mix(in srgb, var(--card) 85%, #c45c2a 15%);
   color: var(--text);

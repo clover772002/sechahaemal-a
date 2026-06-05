@@ -549,7 +549,7 @@ export default function HomePage() {
               {result.decision.logic.scoring.steps.map((step) => (
                 <div
                   key={step.rule}
-                  className={`logic-score-row${step.applied ? " logic-score-row--applied" : ""}`}
+                  className={`logic-score-row${step.applied ? " logic-score-row--applied" : " logic-score-row--skipped"}`}
                 >
                   <span className="logic-score-rule">{step.rule}</span>
                   <span className="logic-score-delta">
