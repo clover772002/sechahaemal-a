@@ -4,6 +4,7 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
 import { fetchAnalysis, getCurrentPosition, getLocationErrorMessage, LocationError } from "@/lib/api";
 import { shareConclusion } from "@/lib/share";
+import { playSwitchClick } from "@/lib/switch-click";
 import type { AnalyzeResponse } from "@/lib/types";
 
 const KMA_WEATHER_URL = "https://www.weather.go.kr/w/index.do";
@@ -77,6 +78,7 @@ export default function HomePage() {
   const openRainDay = (label: string) => {
     setExpandedRainDays((prev) => {
       if (prev.has(label)) return prev;
+      playSwitchClick();
       const next = new Set(prev);
       next.add(label);
       return next;
@@ -86,6 +88,7 @@ export default function HomePage() {
   const openDustDay = (label: string) => {
     setExpandedDustDays((prev) => {
       if (prev.has(label)) return prev;
+      playSwitchClick();
       const next = new Set(prev);
       next.add(label);
       return next;
@@ -303,18 +306,16 @@ export default function HomePage() {
                 >
                   <div className="day-label">{day.label}</div>
                   <div className="day-card-content-zone">
-                    {!expandedRainDays.has(day.label) && (
-                      <span className="day-card-hint">
-                        <span className="day-card-switch" aria-hidden="true" />
-                        탭하여 켜기
-                      </span>
-                    )}
-                    <div className="day-card-body">
-                      <div className="day-card-inner">
+                    <span
+                      className={`day-card-switch${expandedRainDays.has(day.label) ? " on" : ""}`}
+                      aria-hidden="true"
+                    />
+                    {expandedRainDays.has(day.label) && (
+                      <div className="day-card-body">
                         <div className="day-value forecast-grade">{day.max_pop}%</div>
                         <div className="day-sub">강수확률</div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </button>
               ))}
@@ -353,20 +354,18 @@ export default function HomePage() {
                 >
                   <div className="day-label">{day.label}</div>
                   <div className="day-card-content-zone">
-                    {!expandedDustDays.has(day.label) && (
-                      <span className="day-card-hint">
-                        <span className="day-card-switch" aria-hidden="true" />
-                        탭하여 켜기
-                      </span>
-                    )}
-                    <div className="day-card-body">
-                      <div className="day-card-inner">
+                    <span
+                      className={`day-card-switch${expandedDustDays.has(day.label) ? " on" : ""}`}
+                      aria-hidden="true"
+                    />
+                    {expandedDustDays.has(day.label) && (
+                      <div className="day-card-body">
                         <div className="day-value forecast-grade">
                           <DustGrade grade={day.grade} />
                         </div>
                         <div className="day-sub">PM2.5 예보</div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </button>
               ))}
