@@ -8,6 +8,7 @@ import type { AnalyzeResponse } from "@/lib/types";
 const KMA_WEATHER_URL = "https://www.weather.go.kr/w/index.do";
 const AIRKOREA_FORECAST_URL = "https://www.airkorea.or.kr/web/dustForecast?pMENU_NO=113";
 const AIRKOREA_REALTIME_URL = "https://www.airkorea.or.kr/web/realSearch?pMENU_NO=97";
+const CONCLUSION_POPUP_DELAY_MS = 1100;
 
 function DustGrade({ grade }: { grade: number }) {
   const labels = ["", "좋음", "보통", "나쁨", "매우나쁨"];
@@ -56,6 +57,7 @@ export default function HomePage() {
   const [expandedRainDays, setExpandedRainDays] = useState<Set<string>>(() => new Set());
   const [expandedDustDays, setExpandedDustDays] = useState<Set<string>>(() => new Set());
   const [conclusionDismissed, setConclusionDismissed] = useState(false);
+  const [conclusionReady, setConclusionReady] = useState(false);
   const [showLogicSection, setShowLogicSection] = useState(false);
 
   const openRainDay = (label: string) => {
@@ -79,7 +81,7 @@ export default function HomePage() {
   const allRainDaysRevealed = expandedRainDays.size >= 3;
   const allDustDaysRevealed = expandedDustDays.size >= 3;
   const allForecastRevealed = allRainDaysRevealed && allDustDaysRevealed;
-  const showConclusionPopup = allForecastRevealed && !conclusionDismissed;
+  const showConclusionPopup = conclusionReady && !conclusionDismissed;
 
   const openLogicSection = () => {
     setConclusionDismissed(true);
@@ -102,6 +104,7 @@ export default function HomePage() {
       setExpandedRainDays(new Set());
       setExpandedDustDays(new Set());
       setConclusionDismissed(false);
+      setConclusionReady(false);
       setShowLogicSection(false);
     } catch (err) {
       setResult(null);
@@ -120,6 +123,19 @@ export default function HomePage() {
       loadAnalysis();
     }
   }, [status, loadAnalysis]);
+
+  useEffect(() => {
+    if (!allForecastRevealed || conclusionDismissed) {
+      setConclusionReady(false);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setConclusionReady(true);
+    }, CONCLUSION_POPUP_DELAY_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [allForecastRevealed, conclusionDismissed]);
 
   useEffect(() => {
     document.body.style.overflow = showConclusionPopup ? "hidden" : "";
