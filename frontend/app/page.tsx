@@ -130,7 +130,9 @@ export default function HomePage() {
     closeConclusionPopup();
     setShowLogicSection(true);
     requestAnimationFrame(() => {
-      document.getElementById("decision-logic")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      const scrollTarget =
+        document.getElementById("score-explanation") ?? document.getElementById("decision-logic");
+      scrollTarget?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   };
 
@@ -478,6 +480,19 @@ export default function HomePage() {
           </section>
 
           {showLogicSection && (
+          <>
+          {result.decision.reasons.length > 0 && (
+            <section id="score-explanation" className="card decision-logic-card revealed-block">
+              <div className="section-title" style={{ marginBottom: 12 }}>
+                최종점수 풀이
+              </div>
+              <ul className="logic-list logic-reasons">
+                {result.decision.reasons.map((reason) => (
+                  <li key={reason}>{reason}</li>
+                ))}
+              </ul>
+            </section>
+          )}
           <section id="decision-logic" className="card decision-logic-card revealed-block">
             <div className="section-title" style={{ marginBottom: 12 }}>
               최종 판정 로직
@@ -595,16 +610,6 @@ export default function HomePage() {
               ))}
             </ul>
 
-            {result.decision.reasons.length > 0 && (
-              <>
-                <h3 className="logic-subtitle">4. 최종점수 풀이</h3>
-                <ul className="logic-list logic-reasons">
-                  {result.decision.reasons.map((reason) => (
-                    <li key={reason}>{reason}</li>
-                  ))}
-                </ul>
-              </>
-            )}
 
             <div className="logic-share-wrap">
               <ShareConclusionButton onClick={() => handleShareConclusion("logic")} />
@@ -613,6 +618,7 @@ export default function HomePage() {
               )}
             </div>
           </section>
+          </>
           )}
         </>
       )}
