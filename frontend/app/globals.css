@@ -881,7 +881,8 @@ button.day-card {
 }
 
 .onboarding-guide {
-  margin-top: 0;
+  margin-top: 20px;
+  padding: 0 2px;
 }
 
 .onboarding-header {

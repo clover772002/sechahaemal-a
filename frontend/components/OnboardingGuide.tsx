@@ -1,6 +1,6 @@
 export function OnboardingGuide() {
   return (
-    <section className="card onboarding-guide" aria-labelledby="onboarding-title">
+    <section className="onboarding-guide" aria-labelledby="onboarding-title">
       <header className="onboarding-header">
         <h2 id="onboarding-title" className="onboarding-title">
           오늘 세차, 해도 될까?
