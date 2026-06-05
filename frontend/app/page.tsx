@@ -14,6 +14,22 @@ function DustGrade({ grade }: { grade: number }) {
   return <>{labels[grade] ?? "보통"}</>;
 }
 
+function SignalIndicator({ signal }: { signal: "green" | "yellow" | "red" }) {
+  const lights: Array<"red" | "yellow" | "green"> = ["red", "yellow", "green"];
+  return (
+    <div className="signal-indicator" aria-hidden="true">
+      <div className="signal-housing">
+        {lights.map((color) => (
+          <span
+            key={color}
+            className={`signal-bulb ${color}${signal === color ? " active" : ""}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function VerifyLink({ href, label }: { href: string; label: string }) {
   return (
     <a
@@ -39,6 +55,8 @@ export default function HomePage() {
   const [needsLocation, setNeedsLocation] = useState(false);
   const [expandedRainDays, setExpandedRainDays] = useState<Set<string>>(() => new Set());
   const [expandedDustDays, setExpandedDustDays] = useState<Set<string>>(() => new Set());
+  const [conclusionDismissed, setConclusionDismissed] = useState(false);
+  const [showLogicSection, setShowLogicSection] = useState(false);
 
   const openRainDay = (label: string) => {
     setExpandedRainDays((prev) => {
@@ -61,6 +79,15 @@ export default function HomePage() {
   const allRainDaysRevealed = expandedRainDays.size >= 3;
   const allDustDaysRevealed = expandedDustDays.size >= 3;
   const allForecastRevealed = allRainDaysRevealed && allDustDaysRevealed;
+  const showConclusionPopup = allForecastRevealed && !conclusionDismissed;
+
+  const openLogicSection = () => {
+    setConclusionDismissed(true);
+    setShowLogicSection(true);
+    requestAnimationFrame(() => {
+      document.getElementById("decision-logic")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
 
   const loadAnalysis = useCallback(async () => {
     setLoading(true);
@@ -74,6 +101,8 @@ export default function HomePage() {
       setResult(data);
       setExpandedRainDays(new Set());
       setExpandedDustDays(new Set());
+      setConclusionDismissed(false);
+      setShowLogicSection(false);
     } catch (err) {
       setResult(null);
       const isLocationError =
@@ -91,6 +120,13 @@ export default function HomePage() {
       loadAnalysis();
     }
   }, [status, loadAnalysis]);
+
+  useEffect(() => {
+    document.body.style.overflow = showConclusionPopup ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showConclusionPopup]);
 
   if (status === "loading") {
     return (
@@ -292,22 +328,8 @@ export default function HomePage() {
             )}
           </section>
 
-          {allForecastRevealed && (
-          <section className="card signal-card revealed-block">
-            <div className={`signal-light ${result.decision.signal}`}>
-              {result.decision.signal === "green" && "🟢"}
-              {result.decision.signal === "yellow" && "🟡"}
-              {result.decision.signal === "red" && "🔴"}
-            </div>
-            <h2 className="signal-title">{result.decision.signal_label}</h2>
-            <p className="signal-desc">
-              종합 점수 {result.decision.score}점 · {result.decision.summary}
-            </p>
-          </section>
-          )}
-
-          {allForecastRevealed && (
-          <section className="card decision-logic-card revealed-block">
+          {showLogicSection && (
+          <section id="decision-logic" className="card decision-logic-card revealed-block">
             <div className="section-title" style={{ marginBottom: 12 }}>
               최종 판정 로직
             </div>
@@ -412,6 +434,22 @@ export default function HomePage() {
           </section>
           )}
         </>
+      )}
+
+      {result && showConclusionPopup && (
+        <div className="conclusion-overlay" role="dialog" aria-modal="true" aria-labelledby="conclusion-title">
+          <div className="conclusion-modal">
+            <SignalIndicator signal={result.decision.signal} />
+            <p className="conclusion-eyebrow">오늘의 결론</p>
+            <h2 id="conclusion-title" className="conclusion-title">
+              {result.decision.signal_label}
+            </h2>
+            <p className="conclusion-score">종합 점수 {result.decision.score}점</p>
+            <button type="button" className="conclusion-logic-link" onClick={openLogicSection}>
+              대신 로직이 궁금하다면?
+            </button>
+          </div>
+        </div>
       )}
 
       <p className="footer">
