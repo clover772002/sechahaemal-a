@@ -93,34 +93,121 @@ main {
   font-weight: 700;
 }
 
-.section-badge {
+.verify-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.78rem;
   color: var(--muted);
   background: #f8fafc;
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 4px 10px;
+  padding: 4px 8px 4px 10px;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.day-grid {
+.verify-link:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: var(--blue);
+}
+
+.verify-link-img {
+  width: auto;
+  height: 22px;
+  object-fit: contain;
+}
+
+.verify-link-text {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.verify-link-arrow {
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.day-tabs {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 8px;
 }
 
-.day-card {
+.day-tab {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 0.88rem;
+  font-weight: 700;
+  background: #f8fafc;
+  color: var(--muted);
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.day-tab:hover {
+  background: #f1f5f9;
+}
+
+.day-tab:active {
+  transform: scale(0.98);
+}
+
+.day-tab.rain.active {
+  border-color: #93c5fd;
+  background: linear-gradient(180deg, #eff6ff, #ffffff);
+  color: var(--rain);
+}
+
+.day-tab.dust.active {
+  border-color: #c4b5fd;
+  background: linear-gradient(180deg, #f5f3ff, #ffffff);
+  color: var(--dust);
+}
+
+.day-detail {
+  margin-top: 12px;
   border-radius: 14px;
-  padding: 14px 10px;
+  padding: 18px 14px;
   text-align: center;
   border: 1px solid var(--line);
+  animation: day-detail-in 0.2s ease;
 }
 
-.day-card.rain {
+.day-detail.rain {
   background: linear-gradient(180deg, #eff6ff, #ffffff);
 }
 
-.day-card.dust {
+.day-detail.dust {
   background: linear-gradient(180deg, #f5f3ff, #ffffff);
+}
+
+.day-detail .day-value.dust-grade {
+  font-size: 1.35rem;
+}
+
+.day-hint {
+  margin: 12px 0 0;
+  padding: 16px 12px;
+  text-align: center;
+  font-size: 0.84rem;
+  color: var(--muted);
+  background: #f8fafc;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+}
+
+@keyframes day-detail-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .day-label {

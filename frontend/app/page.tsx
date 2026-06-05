@@ -1,13 +1,48 @@
 "use client";
 
 import { signIn, signOut, useSession } from "next-auth/react";
+import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { fetchAnalysis, getCurrentPosition, getLocationErrorMessage, LocationError } from "@/lib/api";
 import type { AnalyzeResponse } from "@/lib/types";
 
+const KMA_WEATHER_URL = "https://www.weather.go.kr/w/index.do";
+const AIRKOREA_FORECAST_URL = "https://www.airkorea.or.kr/web/lastFiveDaysForecast";
+
 function DustGrade({ grade }: { grade: number }) {
   const labels = ["", "좋음", "보통", "나쁨", "매우나쁨"];
   return <>{labels[grade] ?? "보통"}</>;
+}
+
+function VerifyLink({
+  href,
+  label,
+  imageSrc,
+  imageAlt,
+}: {
+  href: string;
+  label: string;
+  imageSrc?: string;
+  imageAlt?: string;
+}) {
+  return (
+    <a
+      className="verify-link"
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`${label}에서 직접 확인`}
+    >
+      {imageSrc ? (
+        <Image src={imageSrc} alt={imageAlt ?? label} width={120} height={28} className="verify-link-img" />
+      ) : (
+        <span className="verify-link-text">{label}</span>
+      )}
+      <span className="verify-link-arrow" aria-hidden="true">
+        ↗
+      </span>
+    </a>
+  );
 }
 
 export default function HomePage() {
@@ -16,6 +51,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsLocation, setNeedsLocation] = useState(false);
+  const [selectedRainDay, setSelectedRainDay] = useState<string | null>(null);
+  const [selectedDustDay, setSelectedDustDay] = useState<string | null>(null);
 
   const loadAnalysis = useCallback(async () => {
     setLoading(true);
@@ -27,6 +64,8 @@ export default function HomePage() {
         position.coords.longitude,
       );
       setResult(data);
+      setSelectedRainDay(null);
+      setSelectedDustDay(null);
     } catch (err) {
       setResult(null);
       const isLocationError =
@@ -127,18 +166,41 @@ export default function HomePage() {
         <>
           <section className="card">
             <div className="section-head">
-              <div className="section-title">3일 강수확률</div>
-              <div className="section-badge">오늘 · 내일 · 모레</div>
+              <div className="section-title">3일 강수예보</div>
+              <VerifyLink
+                href={KMA_WEATHER_URL}
+                label="기상청 날씨누리"
+                imageSrc="/kma-weather-nuri.png"
+                imageAlt="기상청 날씨누리"
+              />
             </div>
-            <div className="day-grid">
+            <div className="day-tabs">
               {result.rain_forecast.days.map((day) => (
-                <div className="day-card rain" key={day.date}>
-                  <div className="day-label">{day.label}</div>
-                  <div className="day-value">{day.max_pop}%</div>
-                  <div className="day-sub">{day.risk_label}</div>
-                </div>
+                <button
+                  key={day.date}
+                  type="button"
+                  className={`day-tab rain${selectedRainDay === day.label ? " active" : ""}`}
+                  onClick={() =>
+                    setSelectedRainDay((prev) => (prev === day.label ? null : day.label))
+                  }
+                  aria-expanded={selectedRainDay === day.label}
+                >
+                  {day.label}
+                </button>
               ))}
             </div>
+            {selectedRainDay ? (
+              result.rain_forecast.days
+                .filter((day) => day.label === selectedRainDay)
+                .map((day) => (
+                  <div className="day-detail rain" key={day.date}>
+                    <div className="day-value">{day.max_pop}%</div>
+                    <div className="day-sub">강수예보 · {day.risk_label}</div>
+                  </div>
+                ))
+            ) : (
+              <p className="day-hint">오늘 · 내일 · 모레를 눌러 강수예보를 확인하세요</p>
+            )}
             <div className="summary-bar">
               <span>
                 3일 평균 <strong>{result.rain_forecast.three_day_avg_pop}%</strong>
@@ -146,26 +208,44 @@ export default function HomePage() {
               <span>
                 최대 <strong>{result.rain_forecast.three_day_max_pop}%</strong>
               </span>
-              <span>비 예상 {result.rain_forecast.rainy_day_count}일</span>
+              <span>비 예보 {result.rain_forecast.rainy_day_count}일</span>
             </div>
           </section>
 
           <section className="card">
             <div className="section-head">
-              <div className="section-title">3일 초미세먼지 예상</div>
-              <div className="section-badge">{result.dust_forecast.region}</div>
+              <div className="section-title">3일 초미세먼지 예보</div>
+              <VerifyLink href={AIRKOREA_FORECAST_URL} label="에어코리아 예보" />
             </div>
-            <div className="day-grid">
+            <div className="day-tabs">
               {result.dust_forecast.days.map((day, index) => (
-                <div className="day-card dust" key={`${day.label}-${index}`}>
-                  <div className="day-label">{day.label}</div>
-                  <div className="day-value" style={{ fontSize: "1.2rem" }}>
-                    <DustGrade grade={day.grade} />
-                  </div>
-                  <div className="day-sub">PM2.5 예상</div>
-                </div>
+                <button
+                  key={`${day.label}-${index}`}
+                  type="button"
+                  className={`day-tab dust${selectedDustDay === day.label ? " active" : ""}`}
+                  onClick={() =>
+                    setSelectedDustDay((prev) => (prev === day.label ? null : day.label))
+                  }
+                  aria-expanded={selectedDustDay === day.label}
+                >
+                  {day.label}
+                </button>
               ))}
             </div>
+            {selectedDustDay ? (
+              result.dust_forecast.days
+                .filter((day) => day.label === selectedDustDay)
+                .map((day, index) => (
+                  <div className="day-detail dust" key={`${day.label}-detail-${index}`}>
+                    <div className="day-value dust-grade">
+                      <DustGrade grade={day.grade} />
+                    </div>
+                    <div className="day-sub">PM2.5 예보</div>
+                  </div>
+                ))
+            ) : (
+              <p className="day-hint">오늘 · 내일 · 모레를 눌러 초미세먼지 예보를 확인하세요</p>
+            )}
             <div className="summary-bar">
               <span>현재 {result.current_air.pm25_value} ㎍/㎥</span>
               <span>현재 {result.current_air.pm25_grade_label}</span>
