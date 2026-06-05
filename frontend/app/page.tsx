@@ -3,6 +3,7 @@
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
 import { fetchAnalysis, getCurrentPosition, getLocationErrorMessage, LocationError } from "@/lib/api";
+import { shareConclusion } from "@/lib/share";
 import type { AnalyzeResponse } from "@/lib/types";
 
 const KMA_WEATHER_URL = "https://www.weather.go.kr/w/index.do";
@@ -59,6 +60,7 @@ export default function HomePage() {
   const [conclusionDismissed, setConclusionDismissed] = useState(false);
   const [conclusionReady, setConclusionReady] = useState(false);
   const [showLogicSection, setShowLogicSection] = useState(false);
+  const [shareNotice, setShareNotice] = useState<string | null>(null);
 
   const openRainDay = (label: string) => {
     setExpandedRainDays((prev) => {
@@ -89,6 +91,24 @@ export default function HomePage() {
     requestAnimationFrame(() => {
       document.getElementById("decision-logic")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
+  };
+
+  const handleShareConclusion = async () => {
+    if (!result) return;
+
+    try {
+      const outcome = await shareConclusion(result);
+      if (outcome === "cancelled") return;
+      if (outcome === "copied") {
+        setShareNotice("복사됐어요. 카톡·문자·메일에 붙여넣기 하세요.");
+      } else {
+        setShareNotice("공유 창에서 앱을 골라 보내세요.");
+      }
+    } catch {
+      setShareNotice("공유에 실패했어요. 잠시 후 다시 시도해 주세요.");
+    }
+
+    window.setTimeout(() => setShareNotice(null), 2800);
   };
 
   const loadAnalysis = useCallback(async () => {
@@ -461,6 +481,10 @@ export default function HomePage() {
               {result.decision.signal_label}
             </h2>
             <p className="conclusion-score">종합 점수 {result.decision.score}점</p>
+            <button type="button" className="conclusion-share-btn" onClick={handleShareConclusion}>
+              공유하기
+            </button>
+            {shareNotice && <p className="conclusion-share-notice">{shareNotice}</p>}
             <button type="button" className="conclusion-logic-link" onClick={openLogicSection}>
               점수 로직이 궁금하다면?
             </button>
