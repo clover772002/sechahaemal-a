@@ -63,7 +63,7 @@ def _parse_region_grade(inform_data: str, region: str) -> str | None:
     return None
 
 
-async def fetch_dust_forecast(region: str) -> dict:
+async def fetch_dust_forecast(region: str, station_name: str) -> dict:
     today = datetime.now().strftime("%Y-%m-%d")
     params = {
         "returnType": "json",
@@ -106,9 +106,21 @@ async def fetch_dust_forecast(region: str) -> dict:
         )
 
     grade_values = [d["grade"] for d in days]
+    issue_time = items[0].get("dataTime") if items else None
     return {
         "days": days[:3],
         "three_day_avg_grade": round(sum(grade_values) / len(grade_values), 1),
         "three_day_worst_grade": max(grade_values),
         "region": region,
+        "forecast_meta": {
+            "region": region,
+            "station_name": station_name,
+            "inform_code": "PM25",
+            "data_time": issue_time,
+            "source": "에어코리아 대기질예보통보(PM25)",
+            "verify_forecast_hint": (
+                f"미세먼지 농도 전망 표 → PM-2.5 행 → {region} 열(오늘·내일·모레)"
+            ),
+            "verify_realtime_hint": f"측정소 검색 → {station_name}",
+        },
     }

@@ -9,6 +9,7 @@ import type { AnalyzeResponse } from "@/lib/types";
 
 const KMA_WEATHER_URL = "https://www.weather.go.kr/w/index.do";
 const AIRKOREA_FORECAST_URL = "https://www.airkorea.or.kr/web/dustForecast?pMENU_NO=113";
+const AIRKOREA_REALTIME_URL = "https://www.airkorea.or.kr/web/realSearch?pMENU_NO=97";
 
 function DustGrade({ grade }: { grade: number }) {
   const labels = ["", "좋음", "보통", "나쁨", "매우나쁨"];
@@ -217,7 +218,26 @@ export default function HomePage() {
           <section className="card">
             <div className="section-head">
               <div className="section-title">3일 초미세먼지 예보</div>
-              <VerifyLink href={AIRKOREA_FORECAST_URL} label="에어코리아 예보" />
+              <div className="verify-links">
+                <VerifyLink
+                  href={AIRKOREA_FORECAST_URL}
+                  label={`예보(${result.dust_forecast.forecast_meta.region})`}
+                />
+                <VerifyLink
+                  href={AIRKOREA_REALTIME_URL}
+                  label={`실시간(${result.location.station_name})`}
+                />
+              </div>
+            </div>
+            <div className="dust-verify-meta">
+              <div>
+                {result.dust_forecast.forecast_meta.source}
+                {result.dust_forecast.forecast_meta.data_time && (
+                  <> · 발표 {result.dust_forecast.forecast_meta.data_time}</>
+                )}
+              </div>
+              <div>예보 대조: {result.dust_forecast.forecast_meta.verify_forecast_hint}</div>
+              <div>실시간 대조: {result.dust_forecast.forecast_meta.verify_realtime_hint}</div>
             </div>
             <div className="day-grid">
               {result.dust_forecast.days.map((day, index) => (
@@ -246,7 +266,12 @@ export default function HomePage() {
               ))}
             </div>
             <div className="summary-bar">
-              <span>현재 {result.current_air.pm25_value} ㎍/㎥</span>
+              <span>
+                현재 {result.current_air.pm25_value} ㎍/㎥
+                {result.current_air.data_time && (
+                  <> ({result.current_air.data_time})</>
+                )}
+              </span>
               <span>현재 {result.current_air.pm25_grade_label}</span>
             </div>
           </section>

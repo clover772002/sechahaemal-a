@@ -129,6 +129,20 @@ main {
   line-height: 1;
 }
 
+.verify-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.dust-verify-meta {
+  margin-bottom: 12px;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
 .day-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

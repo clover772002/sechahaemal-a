@@ -67,8 +67,9 @@ async def analyze_location(
             forecast_meta,
         )
 
-        dust_forecast = await fetch_dust_forecast(region)
+        dust_forecast = await fetch_dust_forecast(region, station_name)
         current_air = await fetch_air_quality(station_name)
+        dust_forecast["forecast_meta"]["current_data_time"] = current_air.get("data_time")
         decision = evaluate_car_wash(rain_summary, dust_forecast)
     except ValueError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc

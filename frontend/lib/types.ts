@@ -39,6 +39,17 @@ export interface RainDay {
   risk_label: string;
 }
 
+export interface DustForecastMeta {
+  region: string;
+  station_name: string;
+  inform_code: string;
+  data_time: string | null;
+  current_data_time?: string | null;
+  source: string;
+  verify_forecast_hint: string;
+  verify_realtime_hint: string;
+}
+
 export interface DustDay {
   label: string;
   grade: number;
@@ -77,8 +88,10 @@ export interface AnalyzeResponse {
     three_day_avg_grade: number;
     three_day_worst_grade: number;
     region: string;
+    forecast_meta: DustForecastMeta;
   };
   current_air: {
+    data_time?: string | null;
     pm25_value: string;
     pm25_grade_label: string;
   };
