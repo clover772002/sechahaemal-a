@@ -12,7 +12,17 @@ GitHub 저장소: https://github.com/clover772002/sechahaemal-a
 - [Vercel](https://vercel.com) 계정 (GitHub 연동)
 - [Railway](https://railway.com) 계정 (GitHub 연동, 구독 중)
 - 공공데이터 API 키 (Encoding)
+- **기상청_중기예보 조회서비스** 활용신청 (단기예보와 별도)
 - Google OAuth 클라이언트 ID/Secret
+
+### 공공데이터 API 활용신청 (필수 2종)
+
+| API | 용도 |
+|-----|------|
+| [단기예보 조회서비스](https://www.data.go.kr/data/15084084/openapi.do) | 격자 기반 3일 예보 |
+| [중기예보 조회서비스](https://www.data.go.kr/data/15000099/openapi.do) | 육상·기온 병합 (날씨누리 일별과 동일 체계) |
+
+동일 인증키에 두 API 모두 **활용신청 → 승인**되어야 합니다. 중기만 미신청 시 `502` 오류가 납니다.
 
 ---
 

@@ -12,6 +12,12 @@ class Settings(BaseSettings):
     weather_api_url: str = (
         "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
     )
+    mid_land_api_url: str = (
+        "https://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst"
+    )
+    mid_ta_api_url: str = (
+        "https://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa"
+    )
     dust_api_url: str = (
         "https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty"
     )

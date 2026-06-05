@@ -79,7 +79,14 @@ export default function KmaDailyForecast({
         <div className="kma-daily-title">일별 예보</div>
         {forecastMeta && (
           <div className="kma-daily-meta">
-            격자 {forecastMeta.nx},{forecastMeta.ny} · 발표 {forecastMeta.base_datetime}
+            단기 격자 {forecastMeta.nx},{forecastMeta.ny} · {forecastMeta.base_datetime}
+            {forecastMeta.mid_land_reg_id && (
+              <>
+                <br />
+                중기 {forecastMeta.mid_land_reg_id}/{forecastMeta.mid_ta_reg_id} ·{" "}
+                {forecastMeta.mid_tm_fc_display}
+              </>
+            )}
           </div>
         )}
       </div>

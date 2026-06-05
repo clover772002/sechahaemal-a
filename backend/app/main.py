@@ -8,6 +8,8 @@ from app.config import settings
 from app.services.air_quality import fetch_air_quality, fetch_dust_forecast
 from app.services.coordinates import find_nearest_station, lat_lng_to_grid
 from app.services.decision import evaluate_car_wash
+from app.services.mid_forecast import fetch_mid_forecast
+from app.services.mid_regions import find_mid_region
 from app.services.weather import (
     fetch_weather_forecast,
     parse_forecast_items,
@@ -57,11 +59,18 @@ async def analyze_location(
             if today_extremes:
                 forecast["daily_meta"].setdefault(today, {}).update(today_extremes)
 
+        mid_region = find_mid_region(lat, lng, region)
+        mid_data = await fetch_mid_forecast(
+            mid_region["land_reg_id"],
+            mid_region["ta_reg_id"],
+        )
+
         rain_summary = summarize_rain_forecast(
             forecast["hours"],
             forecast.get("daily_meta"),
             forecast.get("slots"),
             forecast_meta,
+            mid_data,
         )
 
         dust_forecast = await fetch_dust_forecast(region)
