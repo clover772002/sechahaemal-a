@@ -422,6 +422,18 @@ button.day-card {
   color: var(--muted);
 }
 
+.pollen-species-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.35;
+}
+
+.pollen-species-item {
+  display: block;
+  white-space: nowrap;
+}
+
 .summary-bar {
   margin-top: 14px;
   padding: 12px 14px;

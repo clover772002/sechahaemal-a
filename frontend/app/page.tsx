@@ -448,9 +448,13 @@ export default function HomePage() {
                             <div className="day-value forecast-grade">
                               <PollenGrade grade={day.grade} />
                             </div>
-                            <div className="day-sub">
+                            <div className="day-sub pollen-species-list">
                               {day.active_species_labels.length > 0
-                                ? day.active_species_labels.join("·")
+                                ? day.active_species_labels.map((species) => (
+                                    <span key={species} className="pollen-species-item">
+                                      {species}
+                                    </span>
+                                  ))
                                 : "꽃가루 예보"}
                             </div>
                           </div>
