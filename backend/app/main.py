@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +10,7 @@ from app.services.decision import evaluate_car_wash
 from app.services.weather import (
     enrich_today_slots,
     fetch_weather_forecast,
+    kst_now,
     parse_forecast_items,
     resolve_today_extremes,
     summarize_rain_forecast,
@@ -52,7 +52,7 @@ async def analyze_location(
 
         raw_forecast, forecast_meta = await fetch_weather_forecast(nx, ny)
         forecast = parse_forecast_items(raw_forecast)
-        today = datetime.now().strftime("%Y%m%d")
+        today = kst_now().strftime("%Y%m%d")
         if "TMN" not in forecast["daily_meta"].get(today, {}) or "TMX" not in forecast["daily_meta"].get(today, {}):
             today_extremes = await resolve_today_extremes(nx, ny, today)
             if today_extremes:

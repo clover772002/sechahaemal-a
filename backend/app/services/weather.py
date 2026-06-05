@@ -1,10 +1,17 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.config import settings
 from app.services.api_client import get_json
 
 logger = logging.getLogger(__name__)
+
+KST = timezone(timedelta(hours=9))
+
+
+def kst_now() -> datetime:
+    return datetime.now(KST)
+
 
 FORECAST_BASE_TIMES = ["0200", "0500", "0800", "1100", "1400", "1700", "2000", "2300"]
 AM_SLOT_TIME = "0600"
@@ -35,7 +42,7 @@ WEEKDAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"]
 
 
 def get_latest_base_datetime() -> tuple[str, str]:
-    now = datetime.now()
+    now = kst_now()
     base_date = now.strftime("%Y%m%d")
 
     for base_time in reversed(FORECAST_BASE_TIMES):
@@ -99,7 +106,7 @@ async def fetch_weather_forecast(
 
 async def resolve_today_extremes(nx: int, ny: int, today: str) -> dict[str, int]:
     """저녁 이후에도 오늘 최저/최고기온을 맞추기 위해 당일 이전 발표 시각을 조회합니다."""
-    now = datetime.now()
+    now = kst_now()
     base_date = now.strftime("%Y%m%d")
     found: dict[str, int] = {}
 
@@ -231,7 +238,7 @@ def _period_tmp(
     meta_tmp = meta.get(meta_key)
 
     if is_today:
-        if period == "am" and datetime.now().hour >= 12:
+        if period == "am" and kst_now().hour >= 12:
             return meta_tmp if meta_tmp is not None else window_tmp
         return window_tmp if window_tmp is not None else meta_tmp
 
@@ -249,7 +256,7 @@ async def enrich_today_slots(
         return slots
 
     enriched = dict(slots)
-    now = datetime.now()
+    now = kst_now()
     base_date = now.strftime("%Y%m%d")
 
     for base_time in reversed(FORECAST_BASE_TIMES):
@@ -297,7 +304,7 @@ def _summarize_period(
     *,
     is_today: bool = False,
 ) -> dict:
-    now = datetime.now()
+    now = kst_now()
     sky_time = AM_SLOT_TIME if period == "am" else PM_SLOT_TIME
     sky_slot = slots.get((date, sky_time))
     period_hours = _period_slot_hours(slots, date, period)
@@ -351,7 +358,7 @@ def build_kma_daily_forecast(
 ) -> list[dict]:
     """단기예보 시간별 데이터를 오전/오후 일별 표로 요약합니다."""
     target_dates = [
-        (datetime.now() + timedelta(days=i)).strftime("%Y%m%d") for i in range(3)
+        (kst_now() + timedelta(days=i)).strftime("%Y%m%d") for i in range(3)
     ]
 
     columns: list[dict] = []
@@ -378,7 +385,7 @@ def summarize_rain_forecast(
 ) -> dict:
     """오늘·내일·모레 강수예보를 집계합니다."""
     target_dates = [
-        (datetime.now() + timedelta(days=i)).strftime("%Y%m%d") for i in range(3)
+        (kst_now() + timedelta(days=i)).strftime("%Y%m%d") for i in range(3)
     ]
     meta = daily_meta or {}
     slot_map = slots or {}
