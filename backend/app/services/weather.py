@@ -216,6 +216,64 @@ def _tmp_from_window(
     return min(values) if period == "am" else max(values)
 
 
+def _period_tmp(
+    slots: dict[tuple[str, str], dict],
+    daily_meta: dict[str, dict[str, int]],
+    date: str,
+    period: str,
+    *,
+    is_today: bool,
+) -> int | None:
+    """일별 기온: 내일 이후는 TMN/TMX 우선, 오늘은 시간대 최저·최고 우선."""
+    meta = daily_meta.get(date, {})
+    window_tmp = _tmp_from_window(slots, date, period)
+    meta_key = "TMN" if period == "am" else "TMX"
+    meta_tmp = meta.get(meta_key)
+
+    if is_today:
+        if period == "am" and datetime.now().hour >= 12:
+            return meta_tmp if meta_tmp is not None else window_tmp
+        return window_tmp if window_tmp is not None else meta_tmp
+
+    return meta_tmp if meta_tmp is not None else window_tmp
+
+
+async def enrich_today_slots(
+    nx: int,
+    ny: int,
+    slots: dict[tuple[str, str], dict],
+    today: str,
+) -> dict[tuple[str, str], dict]:
+    """저녁 발표분에 오늘 시간별이 없을 때 당일 이전 발표 시각으로 보강합니다."""
+    if _tmp_from_window(slots, today, "am") is not None and _tmp_from_window(slots, today, "pm") is not None:
+        return slots
+
+    enriched = dict(slots)
+    now = datetime.now()
+    base_date = now.strftime("%Y%m%d")
+
+    for base_time in reversed(FORECAST_BASE_TIMES):
+        hour = int(base_time[:2])
+        minute = int(base_time[2:])
+        published_at = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        if published_at > now:
+            continue
+
+        items, _ = await fetch_weather_forecast(nx, ny, base_date=base_date, base_time=base_time)
+        parsed = parse_forecast_items(items)
+        for (slot_date, slot_time), slot in parsed["slots"].items():
+            if slot_date == today:
+                enriched[(slot_date, slot_time)] = slot
+
+        if (
+            _tmp_from_window(enriched, today, "am") is not None
+            and _tmp_from_window(enriched, today, "pm") is not None
+        ):
+            break
+
+    return enriched
+
+
 def _period_slot_hours(slots: dict[tuple[str, str], dict], date: str, period: str) -> list[dict]:
     predicate = _is_am if period == "am" else _is_pm
     return [
@@ -239,11 +297,7 @@ def _summarize_period(
     sky_slot = slots.get((date, sky_time))
     pop_slot = slots.get((date, pop_time))
     period_hours = _period_slot_hours(slots, date, period)
-    meta = daily_meta.get(date, {})
-
-    tmp = _tmp_from_window(slots, date, period)
-    if tmp is None:
-        tmp = meta.get("TMN") if period == "am" else meta.get("TMX")
+    tmp = _period_tmp(slots, daily_meta, date, period, is_today=is_today)
 
     if is_today and period == "am" and now.hour >= 12:
         return {

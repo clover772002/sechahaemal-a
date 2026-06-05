@@ -11,6 +11,7 @@ from app.services.decision import evaluate_car_wash
 from app.services.mid_forecast import fetch_mid_forecast
 from app.services.mid_regions import find_mid_region
 from app.services.weather import (
+    enrich_today_slots,
     fetch_weather_forecast,
     parse_forecast_items,
     resolve_today_extremes,
@@ -58,6 +59,8 @@ async def analyze_location(
             today_extremes = await resolve_today_extremes(nx, ny, today)
             if today_extremes:
                 forecast["daily_meta"].setdefault(today, {}).update(today_extremes)
+
+        forecast["slots"] = await enrich_today_slots(nx, ny, forecast["slots"], today)
 
         mid_region = find_mid_region(lat, lng, region)
         mid_data = await fetch_mid_forecast(
