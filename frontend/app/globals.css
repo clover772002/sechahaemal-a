@@ -223,10 +223,22 @@ main {
   margin-top: 4px;
 }
 
+.kma-daily-title-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
 .kma-daily-title {
   font-size: 0.95rem;
   font-weight: 700;
-  margin-bottom: 10px;
+}
+
+.kma-daily-meta {
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.4;
 }
 
 .kma-daily-table {

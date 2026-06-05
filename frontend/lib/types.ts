@@ -19,6 +19,15 @@ export interface KmaDailyColumn {
   pm: KmaPeriodForecast;
 }
 
+export interface ForecastMeta {
+  base_date: string;
+  base_time: string;
+  base_datetime: string;
+  nx: number;
+  ny: number;
+  source: string;
+}
+
 export interface RainDay {
   label: string;
   date: string;
@@ -57,6 +66,7 @@ export interface AnalyzeResponse {
   rain_forecast: {
     days: RainDay[];
     kma_daily: KmaDailyColumn[];
+    forecast_meta: ForecastMeta;
     three_day_max_pop: number;
     three_day_avg_pop: number;
     rainy_day_count: number;

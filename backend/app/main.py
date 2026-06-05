@@ -1,15 +1,17 @@
 import logging
+from datetime import datetime
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.services.air_quality import fetch_air_quality, fetch_dust_forecast
-from app.services.coordinates import find_nearest_station, find_weather_grid
+from app.services.coordinates import find_nearest_station, lat_lng_to_grid
 from app.services.decision import evaluate_car_wash
 from app.services.weather import (
     fetch_weather_forecast,
     parse_forecast_items,
+    resolve_today_extremes,
     summarize_rain_forecast,
 )
 
@@ -42,14 +44,25 @@ async def analyze_location(
     lng: float = Query(..., ge=124.0, le=132.0, description="경도"),
 ):
     try:
-        nx, ny = find_weather_grid(lat, lng)
+        nx, ny = lat_lng_to_grid(lat, lng)
         station_info = find_nearest_station(lat, lng)
         station_name = station_info["station_name"]
         region = station_info["region"]
 
-        raw_forecast = await fetch_weather_forecast(nx, ny)
+        raw_forecast, forecast_meta = await fetch_weather_forecast(nx, ny)
         forecast = parse_forecast_items(raw_forecast)
-        rain_summary = summarize_rain_forecast(forecast["hours"], forecast.get("daily_meta"))
+        today = datetime.now().strftime("%Y%m%d")
+        if "TMN" not in forecast["daily_meta"].get(today, {}) or "TMX" not in forecast["daily_meta"].get(today, {}):
+            today_extremes = await resolve_today_extremes(nx, ny, today)
+            if today_extremes:
+                forecast["daily_meta"].setdefault(today, {}).update(today_extremes)
+
+        rain_summary = summarize_rain_forecast(
+            forecast["hours"],
+            forecast.get("daily_meta"),
+            forecast.get("slots"),
+            forecast_meta,
+        )
 
         dust_forecast = await fetch_dust_forecast(region)
         current_air = await fetch_air_quality(station_name)

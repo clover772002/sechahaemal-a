@@ -197,6 +197,7 @@ export default function HomePage() {
               columns={result.rain_forecast.kma_daily}
               expandedDays={expandedRainDays}
               onOpenDay={openRainDay}
+              forecastMeta={result.rain_forecast.forecast_meta}
             />
             <div className="summary-bar">
               <span>

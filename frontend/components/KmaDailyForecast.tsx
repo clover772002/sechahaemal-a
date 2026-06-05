@@ -1,4 +1,4 @@
-import type { KmaDailyColumn } from "@/lib/types";
+import type { ForecastMeta, KmaDailyColumn } from "@/lib/types";
 
 const WEATHER_ICONS: Record<string, string> = {
   sunny: "☀️",
@@ -59,10 +59,12 @@ export default function KmaDailyForecast({
   columns,
   expandedDays,
   onOpenDay,
+  forecastMeta,
 }: {
   columns: KmaDailyColumn[];
   expandedDays: Set<string>;
   onOpenDay: (label: string) => void;
+  forecastMeta?: ForecastMeta;
 }) {
   const rows: { key: "time" | "weather" | "temp" | "pop"; label: string }[] = [
     { key: "time", label: "시각" },
@@ -73,7 +75,14 @@ export default function KmaDailyForecast({
 
   return (
     <div className="kma-daily">
-      <div className="kma-daily-title">일별 예보</div>
+      <div className="kma-daily-title-row">
+        <div className="kma-daily-title">일별 예보</div>
+        {forecastMeta && (
+          <div className="kma-daily-meta">
+            격자 {forecastMeta.nx},{forecastMeta.ny} · 발표 {forecastMeta.base_datetime}
+          </div>
+        )}
+      </div>
       <div className="kma-daily-table">
         <div className="kma-daily-row kma-daily-head">
           <div className="kma-daily-label">날짜</div>
