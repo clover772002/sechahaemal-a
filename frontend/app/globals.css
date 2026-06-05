@@ -781,6 +781,15 @@ button.day-card {
   color: var(--text);
 }
 
+.logic-share-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
 .login-card {
   margin-top: 40px;
   text-align: center;
