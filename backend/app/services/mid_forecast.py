@@ -180,14 +180,13 @@ def merge_period_forecast(
             merged["tmp"] = mid_period["tmp"]
             merged["tmp_display"] = mid_period["tmp_display"]
 
-        if day_offset == 2:
+        if merged.get("pop_display") == "-" and mid_period.get("pop_display") != "-":
             merged["pop"] = mid_period["pop"]
             merged["pop_display"] = mid_period["pop_display"]
+
+        if merged.get("sky_label") in {None, "-", ""} and mid_period.get("sky_label"):
             merged["sky_label"] = mid_period["sky_label"]
             merged["weather_icon"] = mid_period["weather_icon"]
-        elif merged.get("pop_display") == "-" and mid_period.get("pop_display") != "-":
-            merged["pop"] = mid_period["pop"]
-            merged["pop_display"] = mid_period["pop_display"]
 
         return merged
 

@@ -10,6 +10,8 @@ FORECAST_BASE_TIMES = ["0200", "0500", "0800", "1100", "1400", "1700", "2000", "
 AM_SLOT_TIME = "0600"
 AM_POP_TIME = "0900"
 PM_SLOT_TIME = "1800"
+AM_TMP_TIMES = ("0400", "0500", "0600", "0700", "0800", "0900")
+PM_TMP_TIMES = ("1000", "1100", "1200", "1300", "1400", "1500", "1600", "1700", "1800")
 
 PTY_LABELS = {
     "0": "없음",
@@ -200,6 +202,20 @@ def _pop_display(value: int | None) -> tuple[int, str]:
     return value, f"{value}%"
 
 
+def _tmp_from_window(
+    slots: dict[tuple[str, str], dict],
+    date: str,
+    period: str,
+) -> int | None:
+    """기상청 일별예보 기준: 오전 03~09시 최저, 오후 09~18시 최고."""
+    times = AM_TMP_TIMES if period == "am" else PM_TMP_TIMES
+    values = [slots.get((date, time), {}).get("tmp") for time in times]
+    values = [value for value in values if value is not None]
+    if not values:
+        return None
+    return min(values) if period == "am" else max(values)
+
+
 def _period_slot_hours(slots: dict[tuple[str, str], dict], date: str, period: str) -> list[dict]:
     predicate = _is_am if period == "am" else _is_pm
     return [
@@ -218,9 +234,6 @@ def _summarize_period(
     is_today: bool = False,
 ) -> dict:
     now = datetime.now()
-    if is_today and period == "am" and now.hour >= 12:
-        return _empty_period()
-
     sky_time = AM_SLOT_TIME if period == "am" else PM_SLOT_TIME
     pop_time = AM_POP_TIME if period == "am" else PM_SLOT_TIME
     sky_slot = slots.get((date, sky_time))
@@ -228,10 +241,16 @@ def _summarize_period(
     period_hours = _period_slot_hours(slots, date, period)
     meta = daily_meta.get(date, {})
 
-    if period == "am":
-        tmp = meta.get("TMN")
-    else:
-        tmp = meta.get("TMX")
+    tmp = _tmp_from_window(slots, date, period)
+    if tmp is None:
+        tmp = meta.get("TMN") if period == "am" else meta.get("TMX")
+
+    if is_today and period == "am" and now.hour >= 12:
+        return {
+            **_empty_period(),
+            "tmp": tmp,
+            "tmp_display": "-" if tmp is None else f"{tmp}°C",
+        }
 
     if not period_hours and sky_slot is None and pop_slot is None and tmp is None:
         return _empty_period()
