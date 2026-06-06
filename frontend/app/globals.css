@@ -150,6 +150,26 @@ main {
   gap: 10px;
 }
 
+.score-check-card {
+  margin-bottom: 14px;
+}
+
+.score-check-btn {
+  width: 100%;
+  border: none;
+  border-radius: 14px;
+  padding: 16px 18px;
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.28);
+}
+
+.score-check-btn:active {
+  transform: scale(0.99);
+}
+
 button.day-card {
   appearance: none;
   color: inherit;

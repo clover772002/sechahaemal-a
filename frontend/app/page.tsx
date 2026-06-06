@@ -18,8 +18,6 @@ import type { AnalyzeResponse } from "@/lib/types";
 const KMA_WEATHER_URL = "https://www.weather.go.kr/w/index.do";
 const AIRKOREA_FORECAST_URL = "https://www.airkorea.or.kr/web/dustForecast?pMENU_NO=113";
 const KMA_POLLEN_URL = "https://www.weather.go.kr/w/forecast/life.do";
-const CONCLUSION_POPUP_DELAY_MS = 1100;
-
 function DustGrade({ grade }: { grade: number }) {
   const labels = ["", "좋음", "보통", "나쁨", "매우나쁨"];
   return <>{labels[grade] ?? "보통"}</>;
@@ -82,54 +80,22 @@ export default function HomePage() {
   const [loadingPhase, setLoadingPhase] = useState<"location" | "forecast" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [needsLocation, setNeedsLocation] = useState(false);
-  const [expandedRainDays, setExpandedRainDays] = useState<Set<string>>(() => new Set());
-  const [expandedDustDays, setExpandedDustDays] = useState<Set<string>>(() => new Set());
-  const [expandedPollenDays, setExpandedPollenDays] = useState<Set<string>>(() => new Set());
-  const [conclusionDismissed, setConclusionDismissed] = useState(false);
-  const [conclusionReady, setConclusionReady] = useState(false);
+  const [conclusionOpen, setConclusionOpen] = useState(false);
   const [showLogicSection, setShowLogicSection] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [shareNoticeSource, setShareNoticeSource] = useState<"popup" | "logic" | null>(null);
   const [inAppBrowser, setInAppBrowser] = useState(() => detectInAppBrowser());
   const [browserGatePassed, setBrowserGatePassed] = useState(false);
-  const openRainDay = (label: string) => {
-    setExpandedRainDays((prev) => {
-      if (prev.has(label)) return prev;
-      const next = new Set(prev);
-      next.add(label);
-      return next;
-    });
-  };
+  const showConclusionPopup = conclusionOpen;
 
-  const openDustDay = (label: string) => {
-    setExpandedDustDays((prev) => {
-      if (prev.has(label)) return prev;
-      const next = new Set(prev);
-      next.add(label);
-      return next;
-    });
+  const openConclusionPopup = () => {
+    setConclusionOpen(true);
+    setShareNotice(null);
+    setShareNoticeSource(null);
   };
-
-  const openPollenDay = (label: string) => {
-    setExpandedPollenDays((prev) => {
-      if (prev.has(label)) return prev;
-      const next = new Set(prev);
-      next.add(label);
-      return next;
-    });
-  };
-
-  const pollenClickRequired = Boolean(
-    result?.pollen_forecast.available && result.pollen_forecast.days.length >= 3,
-  );
-  const allRainDaysRevealed = expandedRainDays.size >= 3;
-  const allDustDaysRevealed = expandedDustDays.size >= 3;
-  const allPollenDaysRevealed = !pollenClickRequired || expandedPollenDays.size >= 3;
-  const allForecastRevealed = allRainDaysRevealed && allDustDaysRevealed && allPollenDaysRevealed;
-  const showConclusionPopup = conclusionReady && !conclusionDismissed;
 
   const closeConclusionPopup = () => {
-    setConclusionDismissed(true);
+    setConclusionOpen(false);
     setShareNotice(null);
   };
 
@@ -196,11 +162,7 @@ export default function HomePage() {
               : prev,
           );
         });
-      setExpandedRainDays(new Set());
-      setExpandedDustDays(new Set());
-      setExpandedPollenDays(new Set());
-      setConclusionDismissed(false);
-      setConclusionReady(false);
+      setConclusionOpen(false);
       setShowLogicSection(false);
       setShareNotice(null);
       setShareNoticeSource(null);
@@ -226,19 +188,6 @@ export default function HomePage() {
       loadAnalysis();
     }
   }, [status, loadAnalysis]);
-
-  useEffect(() => {
-    if (!allForecastRevealed || conclusionDismissed) {
-      setConclusionReady(false);
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      setConclusionReady(true);
-    }, CONCLUSION_POPUP_DELAY_MS);
-
-    return () => window.clearTimeout(timer);
-  }, [allForecastRevealed, conclusionDismissed]);
 
   const showBrowserPickerPopup = !session && inAppBrowser.isInApp && !browserGatePassed;
 
@@ -344,6 +293,12 @@ export default function HomePage() {
 
       {result && !loading && (
         <>
+          <section className="score-check-card">
+            <button type="button" className="score-check-btn" onClick={openConclusionPopup}>
+              점수 확인
+            </button>
+          </section>
+
           <section className="card">
             <div className="section-head">
               <div className="section-title">3일 강수예보</div>
@@ -362,18 +317,9 @@ export default function HomePage() {
             </div>
             <div className="day-grid">
               {result.rain_forecast.days.map((day, index) => (
-                <button
-                  key={`${day.label}-${index}`}
-                  type="button"
-                  className={`day-card forecast${expandedRainDays.has(day.label) ? " expanded" : ""}`}
-                  onClick={() => openRainDay(day.label)}
-                  aria-expanded={expandedRainDays.has(day.label)}
-                >
+                <div key={`${day.label}-${index}`} className="day-card forecast expanded">
                   <div className="day-label">{day.label}</div>
                   <div className="day-card-content-zone">
-                    {!expandedRainDays.has(day.label) && (
-                      <span className="day-card-hint">클릭</span>
-                    )}
                     <div className="day-card-body">
                       <div className="day-card-inner">
                         <div className="day-value forecast-grade">{day.max_pop}%</div>
@@ -381,16 +327,14 @@ export default function HomePage() {
                       </div>
                     </div>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
-            {allRainDaysRevealed && (
-              <div className="summary-bar revealed">
-                <span>3일 평균 {result.rain_forecast.three_day_avg_pop}%</span>
-                <span>최대 {result.rain_forecast.three_day_max_pop}%</span>
-                <span>비 예보 {result.rain_forecast.rainy_day_count}일</span>
-              </div>
-            )}
+            <div className="summary-bar revealed">
+              <span>3일 평균 {result.rain_forecast.three_day_avg_pop}%</span>
+              <span>최대 {result.rain_forecast.three_day_max_pop}%</span>
+              <span>비 예보 {result.rain_forecast.rainy_day_count}일</span>
+            </div>
           </section>
 
           <section className="card">
@@ -408,18 +352,9 @@ export default function HomePage() {
             </div>
             <div className="day-grid">
               {result.dust_forecast.days.map((day, index) => (
-                <button
-                  key={`${day.label}-${index}`}
-                  type="button"
-                  className={`day-card forecast${expandedDustDays.has(day.label) ? " expanded" : ""}`}
-                  onClick={() => openDustDay(day.label)}
-                  aria-expanded={expandedDustDays.has(day.label)}
-                >
+                <div key={`${day.label}-${index}`} className="day-card forecast expanded">
                   <div className="day-label">{day.label}</div>
                   <div className="day-card-content-zone">
-                    {!expandedDustDays.has(day.label) && (
-                      <span className="day-card-hint">클릭</span>
-                    )}
                     <div className="day-card-body">
                       <div className="day-card-inner">
                         <div className="day-value forecast-grade">
@@ -429,26 +364,24 @@ export default function HomePage() {
                       </div>
                     </div>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
-            {allDustDaysRevealed && (
-              <div className="summary-bar revealed">
-                {result.current_air.loading ? (
-                  <span>현재 대기질 불러오는 중...</span>
-                ) : (
-                  <>
-                    <span>
-                      현재 {result.current_air.pm25_value} ㎍/㎥
-                      {result.current_air.data_time && (
-                        <> ({result.current_air.data_time})</>
-                      )}
-                    </span>
-                    <span>현재 {result.current_air.pm25_grade_label}</span>
-                  </>
-                )}
-              </div>
-            )}
+            <div className="summary-bar revealed">
+              {result.current_air.loading ? (
+                <span>현재 대기질 불러오는 중...</span>
+              ) : (
+                <>
+                  <span>
+                    현재 {result.current_air.pm25_value} ㎍/㎥
+                    {result.current_air.data_time && (
+                      <> ({result.current_air.data_time})</>
+                    )}
+                  </span>
+                  <span>현재 {result.current_air.pm25_grade_label}</span>
+                </>
+              )}
+            </div>
           </section>
 
           <section className="card">
@@ -469,18 +402,9 @@ export default function HomePage() {
               <>
                 <div className="day-grid">
                   {result.pollen_forecast.days.map((day, index) => (
-                    <button
-                      key={`${day.label}-${index}`}
-                      type="button"
-                      className={`day-card forecast${expandedPollenDays.has(day.label) ? " expanded" : ""}`}
-                      onClick={() => openPollenDay(day.label)}
-                      aria-expanded={expandedPollenDays.has(day.label)}
-                    >
+                    <div key={`${day.label}-${index}`} className="day-card forecast expanded">
                       <div className="day-label">{day.label}</div>
                       <div className="day-card-content-zone">
-                        {!expandedPollenDays.has(day.label) && (
-                          <span className="day-card-hint">클릭</span>
-                        )}
                         <div className="day-card-body">
                           <div className="day-card-inner">
                             <div className="day-value forecast-grade">
@@ -498,10 +422,10 @@ export default function HomePage() {
                           </div>
                         </div>
                       </div>
-                    </button>
+                    </div>
                   ))}
                 </div>
-                {allPollenDaysRevealed && result.pollen_forecast.three_day_worst_grade !== null && (
+                {result.pollen_forecast.three_day_worst_grade !== null && (
                   <div className="summary-bar revealed">
                     <span>
                       3일 최악{" "}
@@ -689,7 +613,7 @@ export default function HomePage() {
               type="button"
               className="conclusion-close-btn"
               onClick={closeConclusionPopup}
-              aria-label="닫고 예보 다시 보기"
+              aria-label="닫기"
             >
               ×
             </button>
