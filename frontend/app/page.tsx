@@ -211,10 +211,24 @@ export default function HomePage() {
       )}
       {result && !loading && (
         <>
-          <section className="score-check-card">
-            <button type="button" className="score-check-btn" onClick={openConclusionPopup}>
-              점수 확인
-            </button>
+          <section className="score-check-card conclusion-inline" aria-labelledby="conclusion-title">
+            <SignalIndicator signal={result.decision.signal} />
+            <p className="conclusion-eyebrow">오늘의 결론</p>
+            <h2 id="conclusion-title" className="conclusion-title">
+              {result.decision.signal_label}
+            </h2>
+            <p className="conclusion-score">종합 점수 {result.decision.score}점</p>
+            <div className="conclusion-actions">
+              <div className="conclusion-share-wrap">
+                <ShareConclusionButton onClick={() => handleShareConclusion("summary")} />
+                {shareNotice && shareNoticeSource === "summary" && (
+                  <p className="conclusion-share-notice">{shareNotice}</p>
+                )}
+              </div>
+              <button type="button" className="conclusion-logic-link" onClick={openLogicSection}>
+                점수 로직이 궁금하다면?
+              </button>
+            </div>
           </section>
 
           <section className="card">
@@ -505,38 +519,6 @@ export default function HomePage() {
           </>
           )}
         </>
-      )}
-
-      {result && showConclusionPopup && (
-        <div className="conclusion-overlay" role="dialog" aria-modal="true" aria-labelledby="conclusion-title">
-          <div className="conclusion-modal">
-            <SignalIndicator signal={result.decision.signal} />
-            <p className="conclusion-eyebrow">오늘의 결론</p>
-            <h2 id="conclusion-title" className="conclusion-title">
-              {result.decision.signal_label}
-            </h2>
-            <p className="conclusion-score">종합 점수 {result.decision.score}점</p>
-            <div className="conclusion-actions">
-              <div className="conclusion-share-wrap">
-                <ShareConclusionButton onClick={() => handleShareConclusion("popup")} />
-                {shareNotice && shareNoticeSource === "popup" && (
-                  <p className="conclusion-share-notice">{shareNotice}</p>
-                )}
-              </div>
-              <button type="button" className="conclusion-logic-link" onClick={openLogicSection}>
-                점수 로직이 궁금하다면?
-              </button>
-            </div>
-            <button
-              type="button"
-              className="conclusion-close-btn"
-              onClick={closeConclusionPopup}
-              aria-label="닫기"
-            >
-              ×
-            </button>
-          </div>
-        </div>
       )}
 
       {!result && !loading && !error && <OnboardingGuide />}
