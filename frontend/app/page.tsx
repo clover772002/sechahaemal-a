@@ -14,7 +14,10 @@ import {
   isSpeechSupported,
   primeSpeechSynthesis,
   shouldAutoSpeak,
+  speakAnalysisIntro,
   speakConclusion,
+  startSpeechKeepAlive,
+  stopSpeechKeepAlive,
 } from "@/lib/speech";
 import type { AnalyzeResponse } from "@/lib/types";
 
@@ -94,7 +97,7 @@ export default function HomePage() {
     setSpeechNotice(null);
     void speakConclusion(result.decision).then((ok) => {
       if (!ok) {
-        setSpeechNotice("음성을 재생하지 못했어요. Chrome·Edge 일반 브라우저에서 다시 시도해 주세요.");
+        setSpeechNotice("음성을 재생하지 못했어요. 탭 음소거 해제·인터넷 연결을 확인한 뒤 다시 눌러 주세요.");
       }
     });
   };
@@ -134,6 +137,8 @@ export default function HomePage() {
   const loadAnalysis = useCallback(async () => {
     if (analysisInFlightRef.current) return;
     primeSpeechSynthesis();
+    speakAnalysisIntro();
+    startSpeechKeepAlive();
     analysisInFlightRef.current = true;
     setLoading(true);
     setSpeechNotice(null);
@@ -186,6 +191,7 @@ export default function HomePage() {
       setNeedsLocation(Boolean(isLocationError));
       setError(getLocationErrorMessage(err));
     } finally {
+      stopSpeechKeepAlive();
       analysisInFlightRef.current = false;
       setLoading(false);
       setLoadingPhase(null);
