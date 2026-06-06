@@ -175,6 +175,51 @@ main {
   box-shadow: 0 10px 24px rgba(37, 99, 235, 0.28);
 }
 
+.score-check-hint {
+  margin: 10px 4px 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--muted);
+  text-align: center;
+}
+
+.push-card {
+  margin-bottom: 14px;
+}
+
+.push-subscribe-btn {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 13px 18px;
+  background: #fff;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.push-subscribe-btn:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.push-subscribe-btn.enabled {
+  color: #15803d;
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.push-subscribe-btn:disabled:not(.enabled) {
+  opacity: 0.7;
+}
+
+.push-notice {
+  margin: 8px 4px 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--muted);
+  text-align: center;
+}
+
 .score-check-btn:active {
   transform: scale(0.99);
 }
@@ -654,6 +699,19 @@ button.day-card {
   color: var(--muted);
   line-height: 1.45;
   text-align: center;
+}
+
+.conclusion-listen-btn {
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 4px 0;
+}
+
+.conclusion-listen-btn:hover {
+  text-decoration: underline;
 }
 
 .conclusion-logic-link {

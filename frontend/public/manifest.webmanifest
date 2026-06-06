@@ -1,0 +1,18 @@
+{
+  "name": "오늘 세차, 해도 될까?",
+  "short_name": "세차해말아",
+  "description": "내 위치 기준으로 오늘 세차해도 될지 알려드립니다.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "/icons/chrome.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

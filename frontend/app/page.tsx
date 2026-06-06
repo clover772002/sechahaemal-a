@@ -9,7 +9,15 @@ import {
   LocationError,
 } from "@/lib/api";
 import { OnboardingGuide } from "@/components/OnboardingGuide";
+import {
+  isMorningPushEnabled,
+  isPushSupported,
+  registerServiceWorker,
+  subscribeMorningPush,
+  type PushSubscribeResult,
+} from "@/lib/push";
 import { shareConclusion } from "@/lib/share";
+import { speakConclusion } from "@/lib/speech";
 import type { AnalyzeResponse } from "@/lib/types";
 
 const KMA_WEATHER_URL = "https://www.weather.go.kr/w/index.do";
@@ -79,7 +87,43 @@ export default function HomePage() {
   const [showLogicSection, setShowLogicSection] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [shareNoticeSource, setShareNoticeSource] = useState<"summary" | "logic" | null>(null);
+  const [pushStatus, setPushStatus] = useState<
+    "idle" | "enabling" | PushSubscribeResult
+  >("idle");
+  const [pushNotice, setPushNotice] = useState<string | null>(null);
   const analysisInFlightRef = useRef(false);
+
+  useEffect(() => {
+    void registerServiceWorker();
+    if (isMorningPushEnabled()) {
+      setPushStatus("enabled");
+    } else if (!isPushSupported()) {
+      setPushStatus("unsupported");
+    }
+  }, []);
+
+  const handleEnableMorningPush = async () => {
+    if (pushStatus === "enabling" || pushStatus === "enabled") return;
+    setPushStatus("enabling");
+    setPushNotice(null);
+
+    const outcome = await subscribeMorningPush();
+    setPushStatus(outcome);
+
+    if (outcome === "enabled") {
+      setPushNotice("매일 아침 7시에 알림을 보내드릴게요.");
+    } else if (outcome === "denied") {
+      setPushNotice("알림이 차단됐어요. 브라우저 설정에서 허용해 주세요.");
+    } else if (outcome === "unconfigured") {
+      setPushNotice("알림은 배포 환경에서 설정 후 사용할 수 있어요.");
+    } else if (outcome === "unsupported") {
+      setPushNotice("이 브라우저에서는 알림을 지원하지 않아요.");
+    } else {
+      setPushNotice("알림 설정에 실패했어요. 잠시 후 다시 시도해 주세요.");
+    }
+
+    window.setTimeout(() => setPushNotice(null), 3200);
+  };
 
   const openLogicSection = () => {
     setShowLogicSection(true);
@@ -127,6 +171,7 @@ export default function HomePage() {
         position.coords.longitude,
       );
       setResult(data);
+      speakConclusion(data.decision);
       void fetchCurrentAir(data.location.station_name)
         .then((currentAir) => {
           setResult((prev) => (prev ? { ...prev, current_air: currentAir } : prev));
@@ -180,11 +225,31 @@ export default function HomePage() {
       </div>
 
       {!result && !loading && !error && (
-        <section className="score-check-card">
-          <button type="button" className="score-check-btn" onClick={loadAnalysis}>
-            내 위치로 분석하기
-          </button>
-        </section>
+        <>
+          <section className="score-check-card">
+            <button type="button" className="score-check-btn" onClick={loadAnalysis}>
+              내 위치로 분석하기
+            </button>
+            <p className="score-check-hint">분석이 끝나면 점수와 결론을 음성으로 들려드려요.</p>
+          </section>
+          {pushStatus !== "unsupported" && (
+            <section className="push-card">
+              <button
+                type="button"
+                className={`push-subscribe-btn${pushStatus === "enabled" ? " enabled" : ""}`}
+                onClick={handleEnableMorningPush}
+                disabled={pushStatus === "enabling" || pushStatus === "enabled"}
+              >
+                {pushStatus === "enabling"
+                  ? "알림 설정 중..."
+                  : pushStatus === "enabled"
+                    ? "매일 7시 알림 설정됨"
+                    : "매일 7시 알림 받기"}
+              </button>
+              {pushNotice && <p className="push-notice">{pushNotice}</p>}
+            </section>
+          )}
+        </>
       )}
 
       {error && (
@@ -225,6 +290,13 @@ export default function HomePage() {
                   <p className="conclusion-share-notice">{shareNotice}</p>
                 )}
               </div>
+              <button
+                type="button"
+                className="conclusion-listen-btn"
+                onClick={() => speakConclusion(result.decision)}
+              >
+                다시 듣기
+              </button>
               <button type="button" className="conclusion-logic-link" onClick={openLogicSection}>
                 점수 로직이 궁금하다면?
               </button>
