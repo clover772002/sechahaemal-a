@@ -120,51 +120,10 @@ CORS_ORIGINS=https://YOUR-APP.vercel.app
 | `NEXT_PUBLIC_API_URL` | `http://127.0.0.1:8000` | Railway URL |
 | `CORS_ORIGINS` | localhost 포함 (기본값) | Vercel URL |
 | `PUBLIC_DATA_API_KEY` | `backend/.env` | Railway Variables |
-| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | `backend/.env` | Railway Variables |
-| `VAPID_SUBJECT` | `mailto:you@example.com` | Railway Variables |
-| `CRON_SECRET` | — | Vercel + Railway (동일 값) |
 
 ---
 
-## 7. 매일 7시 푸시 알림 (Web Push)
-
-### VAPID 키 생성 (로컬 1회)
-
-```powershell
-cd frontend
-npx --yes web-push generate-vapid-keys
-```
-
-출력된 **publicKey** → Railway `VAPID_PUBLIC_KEY`, **privateKey** → `VAPID_PRIVATE_KEY`.
-
-### Railway Variables 추가
-
-| Key | Value |
-|-----|-------|
-| `VAPID_PUBLIC_KEY` | web-push로 생성한 public key |
-| `VAPID_PRIVATE_KEY` | web-push로 생성한 private key |
-| `VAPID_SUBJECT` | `mailto:본인이메일@example.com` |
-| `CRON_SECRET` | 랜덤 32자+ 문자열 (Vercel과 동일) |
-
-### Vercel Variables 추가
-
-| Key | Value |
-|-----|-------|
-| `CRON_SECRET` | Railway와 **동일한** 값 |
-
-Vercel Cron이 매일 **UTC 22:00 (= KST 07:00)** 에 `/api/cron/morning-push`를 호출합니다.
-
-### 사용자 흐름
-
-1. 앱 첫 화면에서 **매일 7시 알림 받기** → 브라우저 알림 허용
-2. 매일 7시 푸시 수신 → 탭하면 앱 열림
-3. **내 위치로 분석하기** → 분석 후 **종합 N점, 결론** 음성 안내
-
-iOS Safari는 홈 화면에 추가한 PWA에서 알림이 더 잘 동작합니다.
-
----
-
-## 8. (선택) Railway CLI
+## 7. (선택) Railway CLI
 
 ```powershell
 npm i -g @railway/cli

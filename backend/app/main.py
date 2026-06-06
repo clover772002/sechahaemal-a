@@ -2,9 +2,8 @@ import asyncio
 import logging
 import time
 
-from fastapi import FastAPI, Header, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 
 from app.config import settings
 from app.services.air_quality import fetch_air_quality, fetch_dust_forecast
@@ -13,7 +12,6 @@ from app.services.coordinates import detect_airkorea_region, find_nearest_statio
 from app.services.decision import evaluate_car_wash
 from app.services.pollen import fetch_pollen_forecast
 from app.services.pollen import season_note
-from app.services.push import add_subscription, is_push_configured, send_morning_push
 from app.services.weather import (
     fetch_weather_forecast,
     kst_now,
@@ -51,50 +49,9 @@ UNAVAILABLE_CURRENT_AIR = {
 }
 
 
-class PushSubscriptionBody(BaseModel):
-    endpoint: str
-    keys: dict[str, str]
-    expirationTime: int | None = None
-
-
-def _verify_cron_secret(authorization: str | None) -> None:
-    if not settings.cron_secret:
-        raise HTTPException(status_code=503, detail="CRON_SECRET이 설정되지 않았습니다.")
-    expected = f"Bearer {settings.cron_secret}"
-    if authorization != expected:
-        raise HTTPException(status_code=401, detail="인증에 실패했습니다.")
-
-
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
-
-
-@app.get("/api/push/vapid-public-key")
-async def push_vapid_public_key():
-    if not is_push_configured():
-        raise HTTPException(status_code=503, detail="푸시 알림이 아직 설정되지 않았습니다.")
-    return {"publicKey": settings.vapid_public_key}
-
-
-@app.post("/api/push/subscribe")
-async def push_subscribe(body: PushSubscriptionBody):
-    if not is_push_configured():
-        raise HTTPException(status_code=503, detail="푸시 알림이 아직 설정되지 않았습니다.")
-    try:
-        add_subscription(body.model_dump())
-        return {"status": "ok"}
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-
-@app.post("/api/push/send-morning")
-async def push_send_morning(authorization: str | None = Header(default=None)):
-    _verify_cron_secret(authorization)
-    try:
-        return send_morning_push()
-    except RuntimeError as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 async def _build_rain_summary(nx: int, ny: int) -> dict:
