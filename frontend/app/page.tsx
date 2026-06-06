@@ -1,6 +1,5 @@
 "use client";
 
-import { signIn, signOut, useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
 import {
   fetchAnalysis,
@@ -9,9 +8,7 @@ import {
   getLocationErrorMessage,
   LocationError,
 } from "@/lib/api";
-import { BrowserPickerGate } from "@/components/BrowserPickerGate";
 import { OnboardingGuide } from "@/components/OnboardingGuide";
-import { detectInAppBrowser, openInExternalBrowser } from "@/lib/in-app-browser";
 import { shareConclusion } from "@/lib/share";
 import type { AnalyzeResponse } from "@/lib/types";
 
@@ -74,7 +71,6 @@ function VerifyLink({ href, label }: { href: string; label: string }) {
 }
 
 export default function HomePage() {
-  const { data: session, status } = useSession();
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingPhase, setLoadingPhase] = useState<"location" | "forecast" | null>(null);
@@ -84,8 +80,6 @@ export default function HomePage() {
   const [showLogicSection, setShowLogicSection] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [shareNoticeSource, setShareNoticeSource] = useState<"popup" | "logic" | null>(null);
-  const [inAppBrowser, setInAppBrowser] = useState(() => detectInAppBrowser());
-  const [browserGatePassed, setBrowserGatePassed] = useState(false);
   const showConclusionPopup = conclusionOpen;
 
   const openConclusionPopup = () => {
@@ -180,87 +174,31 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    setInAppBrowser(detectInAppBrowser());
-  }, []);
+    loadAnalysis();
+  }, [loadAnalysis]);
 
   useEffect(() => {
-    if (status === "authenticated") {
-      loadAnalysis();
-    }
-  }, [status, loadAnalysis]);
-
-  const showBrowserPickerPopup = !session && inAppBrowser.isInApp && !browserGatePassed;
-
-  useEffect(() => {
-    document.body.style.overflow = showConclusionPopup || showBrowserPickerPopup ? "hidden" : "";
+    document.body.style.overflow = showConclusionPopup ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [showConclusionPopup, showBrowserPickerPopup, session]);
+  }, [showConclusionPopup]);
 
-  if (status === "loading") {
-    return (
-      <main>
-        <div className="status">로그인 상태 확인 중...</div>
-      </main>
-    );
-  }
-
-  if (!session) {
-    return (
-      <main>
-        <section className="brand">
-          <h1>오늘 세차 할까?</h1>
-          <p>날씨 분석하고 알려드려요</p>
-        </section>
-        <section className="card login-card">
-          <h2>Google로 시작하기</h2>
-          <p>
-            로그인 후 현재 위치를 자동으로 받아
-            <br />
-            오늘·내일·모레 날씨를 분석합니다.
-          </p>
-          <button className="google-btn" onClick={() => signIn("google")}>
-            <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-              <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.654 32.657 29.203 36 24 36c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C33.64 6.053 28.991 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
-              <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C33.64 6.053 28.991 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
-              <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
-              <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.004 8-11.303 8-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44c8.045 0 14.773-5.444 17.094-12.783z"/>
-            </svg>
-            Google 계정으로 로그인
-          </button>
-        </section>
-        <OnboardingGuide />
-        {showBrowserPickerPopup && (
-          <BrowserPickerGate
-            onSelect={(browser) => {
-              openInExternalBrowser(browser);
-              setBrowserGatePassed(true);
-            }}
-          />
-        )}
-      </main>
-    );
-  }
+  const brandSubtitle = loading
+    ? loadingPhase === "location"
+      ? "위치 확인 중..."
+      : "예보 불러오는 중..."
+    : result
+      ? `${result.location.region} · ${result.location.station_name}`
+      : "날씨 분석하고 알려드려요";
 
   return (
     <main>
       <div className="topbar">
         <section className="brand">
           <h1>오늘 세차 할까?</h1>
-          <p>{result ? `${result.location.region} · ${result.location.station_name}` : "내 위치 분석 중"}</p>
+          <p>{brandSubtitle}</p>
         </section>
-        <div className="user-chip">
-          {session.user?.image && (
-            <img src={session.user.image} alt="" />
-          )}
-          <button
-            onClick={() => signOut()}
-            style={{ border: "none", background: "none", padding: 0, color: "inherit" }}
-          >
-            로그아웃
-          </button>
-        </div>
       </div>
 
       {error && (
@@ -285,12 +223,6 @@ export default function HomePage() {
           )}
         </section>
       )}
-      {loading && (
-        <div className="status">
-          {loadingPhase === "location" ? "위치 확인 중..." : "예보 불러오는 중..."}
-        </div>
-      )}
-
       {result && !loading && (
         <>
           <section className="score-check-card">
@@ -620,6 +552,8 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      <OnboardingGuide />
 
       <p className="footer">
         데이터: 기상청 단기예보 · 대기질 예보 · 기상청 꽃가루농도위험지수
