@@ -2,7 +2,10 @@ import type { AnalyzeResponse } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 
-const ANALYSIS_TIMEOUT_MS = 25000;
+const ANALYSIS_TIMEOUT_MS = 20000;
+const CURRENT_AIR_TIMEOUT_MS = 10000;
+
+export type CurrentAirResponse = AnalyzeResponse["current_air"];
 
 export async function fetchAnalysis(lat: number, lng: number): Promise<AnalyzeResponse> {
   const url = `${API_BASE}/api/analyze?lat=${lat}&lng=${lng}`;
@@ -22,6 +25,18 @@ export async function fetchAnalysis(lat: number, lng: number): Promise<AnalyzeRe
     }
     throw err;
   }
+}
+
+export async function fetchCurrentAir(stationName: string): Promise<CurrentAirResponse> {
+  const url = `${API_BASE}/api/current-air?station_name=${encodeURIComponent(stationName)}`;
+  const response = await fetch(url, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(CURRENT_AIR_TIMEOUT_MS),
+  });
+  if (!response.ok) {
+    throw new Error("현재 대기질을 불러오지 못했습니다.");
+  }
+  return response.json();
 }
 
 export class LocationError extends Error {

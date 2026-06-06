@@ -176,8 +176,14 @@ export interface AnalyzeResponse {
   };
   current_air: {
     data_time?: string | null;
+    pm10_value?: string;
+    pm10_grade?: string | null;
+    pm10_grade_label?: string;
     pm25_value: string;
+    pm25_grade?: string | null;
     pm25_grade_label: string;
+    unavailable_reason?: string;
+    loading?: boolean;
   };
   decision: Decision;
 }

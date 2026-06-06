@@ -2,7 +2,13 @@
 
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
-import { fetchAnalysis, getCurrentPosition, getLocationErrorMessage, LocationError } from "@/lib/api";
+import {
+  fetchAnalysis,
+  fetchCurrentAir,
+  getCurrentPosition,
+  getLocationErrorMessage,
+  LocationError,
+} from "@/lib/api";
 import { BrowserPickerGate } from "@/components/BrowserPickerGate";
 import { OnboardingGuide } from "@/components/OnboardingGuide";
 import { detectInAppBrowser, openInExternalBrowser } from "@/lib/in-app-browser";
@@ -172,6 +178,24 @@ export default function HomePage() {
         position.coords.longitude,
       );
       setResult(data);
+      void fetchCurrentAir(data.location.station_name)
+        .then((currentAir) => {
+          setResult((prev) => (prev ? { ...prev, current_air: currentAir } : prev));
+        })
+        .catch(() => {
+          setResult((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  current_air: {
+                    ...prev.current_air,
+                    loading: false,
+                    pm25_grade_label: "측정 불가",
+                  },
+                }
+              : prev,
+          );
+        });
       setExpandedRainDays(new Set());
       setExpandedDustDays(new Set());
       setExpandedPollenDays(new Set());
@@ -410,13 +434,19 @@ export default function HomePage() {
             </div>
             {allDustDaysRevealed && (
               <div className="summary-bar revealed">
-                <span>
-                  현재 {result.current_air.pm25_value} ㎍/㎥
-                  {result.current_air.data_time && (
-                    <> ({result.current_air.data_time})</>
-                  )}
-                </span>
-                <span>현재 {result.current_air.pm25_grade_label}</span>
+                {result.current_air.loading ? (
+                  <span>현재 대기질 불러오는 중...</span>
+                ) : (
+                  <>
+                    <span>
+                      현재 {result.current_air.pm25_value} ㎍/㎥
+                      {result.current_air.data_time && (
+                        <> ({result.current_air.data_time})</>
+                      )}
+                    </span>
+                    <span>현재 {result.current_air.pm25_grade_label}</span>
+                  </>
+                )}
               </div>
             )}
           </section>

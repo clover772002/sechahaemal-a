@@ -86,7 +86,7 @@ async def _fetch_species_pollen(species: str, area_no: str, issue_times: list[st
     endpoint = SPECIES_ENDPOINTS[species]
     base_url = f"{settings.pollen_api_base_url}/{endpoint}"
 
-    for issue_time in issue_times[:2]:
+    for issue_time in issue_times[:1]:
         params = {
             "pageNo": "1",
             "numOfRows": "10",
