@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   fetchAnalysis,
   fetchCurrentAir,
@@ -80,6 +80,7 @@ export default function HomePage() {
   const [showLogicSection, setShowLogicSection] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [shareNoticeSource, setShareNoticeSource] = useState<"popup" | "logic" | null>(null);
+  const analysisInFlightRef = useRef(false);
   const showConclusionPopup = conclusionOpen;
 
   const openConclusionPopup = () => {
@@ -127,6 +128,8 @@ export default function HomePage() {
   };
 
   const loadAnalysis = useCallback(async () => {
+    if (analysisInFlightRef.current) return;
+    analysisInFlightRef.current = true;
     setLoading(true);
     setLoadingPhase("location");
     setError(null);
@@ -168,14 +171,11 @@ export default function HomePage() {
       setNeedsLocation(Boolean(isLocationError));
       setError(getLocationErrorMessage(err));
     } finally {
+      analysisInFlightRef.current = false;
       setLoading(false);
       setLoadingPhase(null);
     }
   }, []);
-
-  useEffect(() => {
-    loadAnalysis();
-  }, [loadAnalysis]);
 
   useEffect(() => {
     document.body.style.overflow = showConclusionPopup ? "hidden" : "";
@@ -190,7 +190,7 @@ export default function HomePage() {
       : "예보 불러오는 중..."
     : result
       ? `${result.location.region} · ${result.location.station_name}`
-      : "날씨 분석하고 알려드려요";
+      : "버튼을 누르면 내 위치 기준으로 분석합니다";
 
   return (
     <main>
@@ -200,6 +200,14 @@ export default function HomePage() {
           <p>{brandSubtitle}</p>
         </section>
       </div>
+
+      {!result && !loading && !error && (
+        <section className="score-check-card">
+          <button type="button" className="score-check-btn" onClick={loadAnalysis}>
+            내 위치로 분석하기
+          </button>
+        </section>
+      )}
 
       {error && (
         <section className="card">
@@ -212,7 +220,7 @@ export default function HomePage() {
           {needsLocation && (
             <>
               <button className="google-btn" onClick={loadAnalysis} disabled={loading}>
-                📍 위치 허용하기 / 다시 시도
+                📍 위치 허용 후 다시 시도
               </button>
               <p className="footer" style={{ marginTop: 12, textAlign: "left" }}>
                 Chrome/Edge 주소창 왼쪽 자물쇠 아이콘 → 사이트 설정 → 위치 → <strong>허용</strong>

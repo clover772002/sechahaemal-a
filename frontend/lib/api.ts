@@ -64,7 +64,7 @@ export function getLocationErrorMessage(err: unknown): string {
     return "현재 위치를 확인할 수 없습니다. GPS/Wi-Fi를 켠 뒤 다시 시도해 주세요.";
   }
   if (code === 3) {
-    return "위치 요청 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.";
+    return "위치 허용 팝업이 늦게 뜨거나 응답이 지연됐습니다. 아래 버튼을 다시 눌러 주세요.";
   }
   if (err instanceof Error) {
     return err.message;
@@ -72,18 +72,45 @@ export function getLocationErrorMessage(err: unknown): string {
   return "위치 정보를 가져오지 못했습니다.";
 }
 
-export function getCurrentPosition(): Promise<GeolocationPosition> {
+type PositionOptions = {
+  timeout?: number;
+};
+
+function requestCurrentPosition(timeout: number): Promise<GeolocationPosition> {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
-      reject(new LocationError(0, "이 브라우저는 위치 정보를 지원하지 않습니다. Chrome 또는 Edge를 사용해 주세요."));
+      reject(
+        new LocationError(
+          0,
+          "이 브라우저는 위치 정보를 지원하지 않습니다. Chrome 또는 Edge를 사용해 주세요.",
+        ),
+      );
       return;
     }
-    navigator.geolocation.getCurrentPosition(resolve, (error) => {
-      reject(new LocationError(error.code, getLocationErrorMessage(error)));
-    }, {
-      enableHighAccuracy: false,
-      timeout: 10000,
-      maximumAge: 300000,
-    });
+
+    navigator.geolocation.getCurrentPosition(
+      resolve,
+      (error) => {
+        reject(new LocationError(error.code, getLocationErrorMessage(error)));
+      },
+      {
+        enableHighAccuracy: false,
+        timeout,
+        maximumAge: 300000,
+      },
+    );
   });
+}
+
+export async function getCurrentPosition(options?: PositionOptions): Promise<GeolocationPosition> {
+  const timeout = options?.timeout ?? 30000;
+
+  try {
+    return await requestCurrentPosition(timeout);
+  } catch (err) {
+    if (err instanceof LocationError && err.code === 3) {
+      return requestCurrentPosition(timeout);
+    }
+    throw err;
+  }
 }
