@@ -10,7 +10,12 @@ import {
 } from "@/lib/api";
 import { OnboardingGuide } from "@/components/OnboardingGuide";
 import { shareConclusion } from "@/lib/share";
-import { speakConclusion } from "@/lib/speech";
+import {
+  isSpeechSupported,
+  primeSpeechSynthesis,
+  shouldAutoSpeak,
+  speakConclusion,
+} from "@/lib/speech";
 import type { AnalyzeResponse } from "@/lib/types";
 
 const KMA_WEATHER_URL = "https://www.weather.go.kr/w/index.do";
@@ -80,7 +85,19 @@ export default function HomePage() {
   const [showLogicSection, setShowLogicSection] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [shareNoticeSource, setShareNoticeSource] = useState<"summary" | "logic" | null>(null);
+  const [speechNotice, setSpeechNotice] = useState<string | null>(null);
   const analysisInFlightRef = useRef(false);
+
+  const handleListenConclusion = () => {
+    if (!result) return;
+    primeSpeechSynthesis();
+    setSpeechNotice(null);
+    void speakConclusion(result.decision).then((ok) => {
+      if (!ok) {
+        setSpeechNotice("음성을 재생하지 못했어요. Chrome·Edge 일반 브라우저에서 다시 시도해 주세요.");
+      }
+    });
+  };
 
   const openLogicSection = () => {
     setShowLogicSection(true);
@@ -116,8 +133,10 @@ export default function HomePage() {
 
   const loadAnalysis = useCallback(async () => {
     if (analysisInFlightRef.current) return;
+    primeSpeechSynthesis();
     analysisInFlightRef.current = true;
     setLoading(true);
+    setSpeechNotice(null);
     setLoadingPhase("location");
     setError(null);
     try {
@@ -128,7 +147,16 @@ export default function HomePage() {
         position.coords.longitude,
       );
       setResult(data);
-      speakConclusion(data.decision);
+      if (!isSpeechSupported()) {
+        setSpeechNotice("이 브라우저는 음성 안내를 지원하지 않아요.");
+      } else if (shouldAutoSpeak()) {
+        const spoke = await speakConclusion(data.decision);
+        if (!spoke) {
+          setSpeechNotice("자동 재생에 실패했어요. 아래 '결과 듣기'를 눌러 주세요.");
+        }
+      } else {
+        setSpeechNotice("아래 '결과 듣기'를 눌러 주세요.");
+      }
       void fetchCurrentAir(data.location.station_name)
         .then((currentAir) => {
           setResult((prev) => (prev ? { ...prev, current_air: currentAir } : prev));
@@ -228,13 +256,10 @@ export default function HomePage() {
                   <p className="conclusion-share-notice">{shareNotice}</p>
                 )}
               </div>
-              <button
-                type="button"
-                className="conclusion-listen-btn"
-                onClick={() => speakConclusion(result.decision)}
-              >
-                다시 듣기
+              <button type="button" className="conclusion-listen-btn" onClick={handleListenConclusion}>
+                결과 듣기
               </button>
+              {speechNotice && <p className="conclusion-speech-notice">{speechNotice}</p>}
               <button type="button" className="conclusion-logic-link" onClick={openLogicSection}>
                 점수 로직이 궁금하다면?
               </button>

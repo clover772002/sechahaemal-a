@@ -665,16 +665,26 @@ button.day-card {
 }
 
 .conclusion-listen-btn {
-  border: none;
-  background: transparent;
-  color: #2563eb;
-  font-size: 0.88rem;
-  font-weight: 600;
-  padding: 4px 0;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 8px 16px;
 }
 
 .conclusion-listen-btn:hover {
-  text-decoration: underline;
+  background: #dbeafe;
+}
+
+.conclusion-speech-notice {
+  width: 100%;
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--muted);
+  text-align: center;
 }
 
 .conclusion-logic-link {
