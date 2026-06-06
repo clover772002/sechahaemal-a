@@ -11,9 +11,7 @@ import {
 import { OnboardingGuide } from "@/components/OnboardingGuide";
 import { shareConclusion } from "@/lib/share";
 import {
-  isSpeechSupported,
   primeSpeechSynthesis,
-  shouldAutoSpeak,
   speakAnalysisIntro,
   speakConclusion,
   startSpeechKeepAlive,
@@ -88,19 +86,7 @@ export default function HomePage() {
   const [showLogicSection, setShowLogicSection] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [shareNoticeSource, setShareNoticeSource] = useState<"summary" | "logic" | null>(null);
-  const [speechNotice, setSpeechNotice] = useState<string | null>(null);
   const analysisInFlightRef = useRef(false);
-
-  const handleListenConclusion = () => {
-    if (!result) return;
-    primeSpeechSynthesis();
-    setSpeechNotice(null);
-    void speakConclusion(result.decision).then((ok) => {
-      if (!ok) {
-        setSpeechNotice("음성을 재생하지 못했어요. 탭 음소거 해제·인터넷 연결을 확인한 뒤 다시 눌러 주세요.");
-      }
-    });
-  };
 
   const openLogicSection = () => {
     setShowLogicSection(true);
@@ -141,7 +127,6 @@ export default function HomePage() {
     startSpeechKeepAlive();
     analysisInFlightRef.current = true;
     setLoading(true);
-    setSpeechNotice(null);
     setLoadingPhase("location");
     setError(null);
     try {
@@ -152,16 +137,7 @@ export default function HomePage() {
         position.coords.longitude,
       );
       setResult(data);
-      if (!isSpeechSupported()) {
-        setSpeechNotice("이 브라우저는 음성 안내를 지원하지 않아요.");
-      } else if (shouldAutoSpeak()) {
-        const spoke = await speakConclusion(data.decision);
-        if (!spoke) {
-          setSpeechNotice("자동 재생에 실패했어요. 아래 '결과 듣기'를 눌러 주세요.");
-        }
-      } else {
-        setSpeechNotice("아래 '결과 듣기'를 눌러 주세요.");
-      }
+      void speakConclusion(data.decision);
       void fetchCurrentAir(data.location.station_name)
         .then((currentAir) => {
           setResult((prev) => (prev ? { ...prev, current_air: currentAir } : prev));
@@ -262,10 +238,6 @@ export default function HomePage() {
                   <p className="conclusion-share-notice">{shareNotice}</p>
                 )}
               </div>
-              <button type="button" className="conclusion-listen-btn" onClick={handleListenConclusion}>
-                결과 듣기
-              </button>
-              {speechNotice && <p className="conclusion-speech-notice">{speechNotice}</p>}
               <button type="button" className="conclusion-logic-link" onClick={openLogicSection}>
                 점수 로직이 궁금하다면?
               </button>
