@@ -2,14 +2,26 @@ import type { AnalyzeResponse } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 
+const ANALYSIS_TIMEOUT_MS = 25000;
+
 export async function fetchAnalysis(lat: number, lng: number): Promise<AnalyzeResponse> {
   const url = `${API_BASE}/api/analyze?lat=${lat}&lng=${lng}`;
-  const response = await fetch(url, { cache: "no-store" });
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: "분석에 실패했습니다." }));
-    throw new Error(error.detail ?? "분석에 실패했습니다.");
+  try {
+    const response = await fetch(url, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(ANALYSIS_TIMEOUT_MS),
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: "분석에 실패했습니다." }));
+      throw new Error(error.detail ?? "분석에 실패했습니다.");
+    }
+    return response.json();
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "TimeoutError") {
+      throw new Error("예보 요청 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.");
+    }
+    throw err;
   }
-  return response.json();
 }
 
 export class LocationError extends Error {
@@ -54,9 +66,9 @@ export function getCurrentPosition(): Promise<GeolocationPosition> {
     navigator.geolocation.getCurrentPosition(resolve, (error) => {
       reject(new LocationError(error.code, getLocationErrorMessage(error)));
     }, {
-      enableHighAccuracy: true,
-      timeout: 15000,
-      maximumAge: 0,
+      enableHighAccuracy: false,
+      timeout: 10000,
+      maximumAge: 300000,
     });
   });
 }

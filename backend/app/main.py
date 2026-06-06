@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from fastapi import FastAPI, HTTPException, Query
@@ -9,11 +10,8 @@ from app.services.coordinates import detect_airkorea_region, find_nearest_statio
 from app.services.decision import evaluate_car_wash
 from app.services.pollen import fetch_pollen_forecast
 from app.services.weather import (
-    enrich_today_slots,
     fetch_weather_forecast,
-    kst_now,
     parse_forecast_items,
-    resolve_today_extremes,
     summarize_rain_forecast,
 )
 
@@ -40,6 +38,34 @@ async def health_check():
     return {"status": "ok"}
 
 
+async def _build_rain_summary(nx: int, ny: int) -> dict:
+    raw_forecast, forecast_meta = await fetch_weather_forecast(nx, ny)
+    forecast = parse_forecast_items(raw_forecast)
+    return summarize_rain_forecast(
+        forecast["hours"],
+        forecast.get("daily_meta"),
+        forecast.get("slots"),
+        forecast_meta,
+    )
+
+
+async def _fetch_current_air(station_name: str) -> dict:
+    try:
+        return await fetch_air_quality(station_name)
+    except RuntimeError as exc:
+        logger.warning("실시간 대기질 조회 실패(%s): %s", station_name, exc)
+        return {
+            "data_time": None,
+            "pm10_value": "-",
+            "pm10_grade": None,
+            "pm10_grade_label": "측정 불가",
+            "pm25_value": "-",
+            "pm25_grade": None,
+            "pm25_grade_label": "측정 불가",
+            "unavailable_reason": str(exc),
+        }
+
+
 @app.get("/api/analyze")
 async def analyze_location(
     lat: float = Query(..., ge=33.0, le=39.5, description="위도"),
@@ -52,40 +78,13 @@ async def analyze_location(
         region = station_info["region"]
         airkorea_region = detect_airkorea_region(lat, lng, region)
 
-        raw_forecast, forecast_meta = await fetch_weather_forecast(nx, ny)
-        forecast = parse_forecast_items(raw_forecast)
-        today = kst_now().strftime("%Y%m%d")
-        if "TMN" not in forecast["daily_meta"].get(today, {}) or "TMX" not in forecast["daily_meta"].get(today, {}):
-            today_extremes = await resolve_today_extremes(nx, ny, today)
-            if today_extremes:
-                forecast["daily_meta"].setdefault(today, {}).update(today_extremes)
-
-        forecast["slots"] = await enrich_today_slots(nx, ny, forecast["slots"], today)
-
-        rain_summary = summarize_rain_forecast(
-            forecast["hours"],
-            forecast.get("daily_meta"),
-            forecast.get("slots"),
-            forecast_meta,
+        rain_summary, dust_forecast, current_air, pollen_forecast = await asyncio.gather(
+            _build_rain_summary(nx, ny),
+            fetch_dust_forecast(airkorea_region, station_name),
+            _fetch_current_air(station_name),
+            fetch_pollen_forecast(region),
         )
-
-        dust_forecast = await fetch_dust_forecast(airkorea_region, station_name)
-        try:
-            current_air = await fetch_air_quality(station_name)
-        except RuntimeError as exc:
-            logger.warning("실시간 대기질 조회 실패(%s): %s", station_name, exc)
-            current_air = {
-                "data_time": None,
-                "pm10_value": "-",
-                "pm10_grade": None,
-                "pm10_grade_label": "측정 불가",
-                "pm25_value": "-",
-                "pm25_grade": None,
-                "pm25_grade_label": "측정 불가",
-                "unavailable_reason": str(exc),
-            }
         dust_forecast["forecast_meta"]["current_data_time"] = current_air.get("data_time")
-        pollen_forecast = await fetch_pollen_forecast(region)
         decision = evaluate_car_wash(rain_summary, dust_forecast, pollen_forecast)
     except ValueError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc

@@ -73,6 +73,7 @@ export default function HomePage() {
   const { data: session, status } = useSession();
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingPhase, setLoadingPhase] = useState<"location" | "forecast" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [needsLocation, setNeedsLocation] = useState(false);
   const [expandedRainDays, setExpandedRainDays] = useState<Set<string>>(() => new Set());
@@ -161,9 +162,11 @@ export default function HomePage() {
 
   const loadAnalysis = useCallback(async () => {
     setLoading(true);
+    setLoadingPhase("location");
     setError(null);
     try {
       const position = await getCurrentPosition();
+      setLoadingPhase("forecast");
       const data = await fetchAnalysis(
         position.coords.latitude,
         position.coords.longitude,
@@ -186,6 +189,7 @@ export default function HomePage() {
       setError(getLocationErrorMessage(err));
     } finally {
       setLoading(false);
+      setLoadingPhase(null);
     }
   }, []);
 
@@ -308,7 +312,11 @@ export default function HomePage() {
           )}
         </section>
       )}
-      {loading && <div className="status">현재 위치 기준으로 분석 중...</div>}
+      {loading && (
+        <div className="status">
+          {loadingPhase === "location" ? "위치 확인 중..." : "예보 불러오는 중..."}
+        </div>
+      )}
 
       {result && !loading && (
         <>
