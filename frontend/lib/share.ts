@@ -21,7 +21,7 @@ export function buildConclusionSharePayload(result: AnalyzeResponse): ShareData 
     .join("\n");
 
   return {
-    title: "오늘 세차 할까?",
+    title: "오늘 세차, 해도 될까?",
     text,
     url: typeof window !== "undefined" ? window.location.href : undefined,
   };

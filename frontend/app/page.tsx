@@ -196,7 +196,7 @@ export default function HomePage() {
     <main>
       <div className="topbar">
         <section className="brand">
-          <h1>오늘 세차 할까?</h1>
+          <h1>오늘 세차, 해도 될까?</h1>
           <p>{brandSubtitle}</p>
         </section>
       </div>
@@ -561,7 +561,7 @@ export default function HomePage() {
         </div>
       )}
 
-      <OnboardingGuide />
+      {!result && !loading && !error && <OnboardingGuide />}
 
       <p className="footer">
         데이터: 기상청 단기예보 · 대기질 예보 · 기상청 꽃가루농도위험지수

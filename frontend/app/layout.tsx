@@ -3,7 +3,7 @@ import Providers from "@/components/Providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "오늘 세차 할까?",
+  title: "오늘 세차, 해도 될까?",
   description: "내 위치 기준으로 오늘 세차해도 될지 알려드립니다.",
 };
 
