@@ -76,26 +76,12 @@ export default function HomePage() {
   const [loadingPhase, setLoadingPhase] = useState<"location" | "forecast" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [needsLocation, setNeedsLocation] = useState(false);
-  const [conclusionOpen, setConclusionOpen] = useState(false);
   const [showLogicSection, setShowLogicSection] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
-  const [shareNoticeSource, setShareNoticeSource] = useState<"popup" | "logic" | null>(null);
+  const [shareNoticeSource, setShareNoticeSource] = useState<"summary" | "logic" | null>(null);
   const analysisInFlightRef = useRef(false);
-  const showConclusionPopup = conclusionOpen;
-
-  const openConclusionPopup = () => {
-    setConclusionOpen(true);
-    setShareNotice(null);
-    setShareNoticeSource(null);
-  };
-
-  const closeConclusionPopup = () => {
-    setConclusionOpen(false);
-    setShareNotice(null);
-  };
 
   const openLogicSection = () => {
-    closeConclusionPopup();
     setShowLogicSection(true);
     requestAnimationFrame(() => {
       const scrollTarget =
@@ -104,7 +90,7 @@ export default function HomePage() {
     });
   };
 
-  const handleShareConclusion = async (source: "popup" | "logic") => {
+  const handleShareConclusion = async (source: "summary" | "logic") => {
     if (!result) return;
 
     try {
@@ -159,7 +145,6 @@ export default function HomePage() {
               : prev,
           );
         });
-      setConclusionOpen(false);
       setShowLogicSection(false);
       setShareNotice(null);
       setShareNoticeSource(null);
@@ -176,13 +161,6 @@ export default function HomePage() {
       setLoadingPhase(null);
     }
   }, []);
-
-  useEffect(() => {
-    document.body.style.overflow = showConclusionPopup ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [showConclusionPopup]);
 
   const brandSubtitle = loading
     ? loadingPhase === "location"
