@@ -8,6 +8,7 @@ import {
   getLocationErrorMessage,
   LocationError,
 } from "@/lib/api";
+import { FriendRegionExplorer } from "@/components/FriendRegionExplorer";
 import { OnboardingGuide } from "@/components/OnboardingGuide";
 import { shareConclusion } from "@/lib/share";
 import {
@@ -243,6 +244,8 @@ export default function HomePage() {
               </button>
             </div>
           </section>
+
+          <FriendRegionExplorer myResult={result} />
 
           <section className="card">
             <div className="section-head">
