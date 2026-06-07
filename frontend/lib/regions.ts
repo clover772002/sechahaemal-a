@@ -13,6 +13,7 @@ export interface MacroRegion {
   lat: number;
   lng: number;
   gridArea: string;
+  friendShareLabel: string;
 }
 
 export const MACRO_REGIONS: MacroRegion[] = [
@@ -23,6 +24,7 @@ export const MACRO_REGIONS: MacroRegion[] = [
     lat: 37.5665,
     lng: 126.978,
     gridArea: "capital",
+    friendShareLabel: "수도권 친구한테 보내기",
   },
   {
     id: "gangwon",
@@ -31,6 +33,7 @@ export const MACRO_REGIONS: MacroRegion[] = [
     lat: 37.8813,
     lng: 127.7298,
     gridArea: "gangwon",
+    friendShareLabel: "강원도 친구한테 보내기",
   },
   {
     id: "chungcheong",
@@ -39,6 +42,7 @@ export const MACRO_REGIONS: MacroRegion[] = [
     lat: 36.3504,
     lng: 127.3845,
     gridArea: "chungcheong",
+    friendShareLabel: "충청도 친구한테 보내기",
   },
   {
     id: "jeolla",
@@ -47,6 +51,7 @@ export const MACRO_REGIONS: MacroRegion[] = [
     lat: 35.1595,
     lng: 126.8526,
     gridArea: "jeolla",
+    friendShareLabel: "전라도 친구한테 보내기",
   },
   {
     id: "gyeongsang",
@@ -55,6 +60,7 @@ export const MACRO_REGIONS: MacroRegion[] = [
     lat: 35.8714,
     lng: 128.6014,
     gridArea: "gyeongsang",
+    friendShareLabel: "경상도 친구한테 보내기",
   },
   {
     id: "jeju",
@@ -63,6 +69,7 @@ export const MACRO_REGIONS: MacroRegion[] = [
     lat: 33.4996,
     lng: 126.5312,
     gridArea: "jeju",
+    friendShareLabel: "제주도 친구한테 보내기",
   },
 ];
 

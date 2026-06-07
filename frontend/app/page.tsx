@@ -87,6 +87,7 @@ export default function HomePage() {
   const [showLogicSection, setShowLogicSection] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [shareNoticeSource, setShareNoticeSource] = useState<"summary" | "logic" | null>(null);
+  const [friendRegionOpen, setFriendRegionOpen] = useState(false);
   const analysisInFlightRef = useRef(false);
 
   const openLogicSection = () => {
@@ -158,6 +159,7 @@ export default function HomePage() {
           );
         });
       setShowLogicSection(false);
+      setFriendRegionOpen(false);
       setShareNotice(null);
       setShareNoticeSource(null);
     } catch (err) {
@@ -233,19 +235,28 @@ export default function HomePage() {
             </h2>
             <p className="conclusion-score">종합 점수 {result.decision.score}점</p>
             <div className="conclusion-actions">
-              <div className="conclusion-share-wrap">
+              <div className="conclusion-action-row">
                 <ShareConclusionButton onClick={() => handleShareConclusion("summary")} />
-                {shareNotice && shareNoticeSource === "summary" && (
-                  <p className="conclusion-share-notice">{shareNotice}</p>
-                )}
+                <button
+                  type="button"
+                  className="friend-region-trigger-btn"
+                  onClick={() => setFriendRegionOpen((prev) => !prev)}
+                >
+                  친구동네 찾아보기
+                </button>
               </div>
+              {shareNotice && shareNoticeSource === "summary" && (
+                <p className="conclusion-share-notice">{shareNotice}</p>
+              )}
               <button type="button" className="conclusion-logic-link" onClick={openLogicSection}>
                 점수 로직이 궁금하다면?
               </button>
             </div>
           </section>
 
-          <FriendRegionExplorer myResult={result} />
+          {friendRegionOpen && (
+            <FriendRegionExplorer onClose={() => setFriendRegionOpen(false)} />
+          )}
 
           <section className="card">
             <div className="section-head">

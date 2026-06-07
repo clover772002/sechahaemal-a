@@ -192,27 +192,8 @@ main {
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
 }
 
-.friend-region-open-btn {
-  width: 100%;
-  border: 1px solid #c7d2fe;
-  border-radius: 14px;
-  padding: 14px 16px;
-  background: linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%);
-  color: #3730a3;
-  font-size: 0.98rem;
-  font-weight: 700;
-}
-
-.friend-region-open-btn:hover {
-  filter: brightness(1.02);
-}
-
-.friend-region-open-hint {
-  margin: 8px 4px 0;
-  font-size: 0.78rem;
-  line-height: 1.45;
-  color: var(--muted);
-  text-align: center;
+.friend-region-card--open {
+  margin-top: -6px;
 }
 
 .friend-region-notice {
@@ -383,20 +364,13 @@ main {
   padding: 12px 16px;
   background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
   color: #fff;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
   font-weight: 700;
+  line-height: 1.3;
 }
 
 .friend-region-share-btn:hover {
   filter: brightness(1.05);
-}
-
-.friend-region-share-hint {
-  margin: 8px 0 0;
-  font-size: 0.74rem;
-  line-height: 1.45;
-  color: var(--muted);
-  text-align: center;
 }
 
 .friend-region-share-notice {
@@ -847,10 +821,9 @@ button.day-card {
   width: 100%;
 }
 
-.conclusion-share-wrap {
+.conclusion-action-row {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  gap: 8px;
   width: 100%;
 }
 
@@ -858,16 +831,18 @@ button.day-card {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  width: min(100%, 220px);
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
   margin: 0;
-  padding: 14px 28px;
+  padding: 14px 12px;
   border: none;
   border-radius: 999px;
   background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
   color: #ffffff;
-  font-size: 0.96rem;
+  font-size: 0.88rem;
   font-weight: 700;
+  line-height: 1.2;
   box-shadow: 0 8px 20px rgba(37, 99, 235, 0.28);
   transition: transform 0.12s ease, box-shadow 0.15s ease, filter 0.15s ease;
 }
@@ -879,6 +854,23 @@ button.day-card {
 
 .conclusion-share-btn:active {
   transform: scale(0.98);
+}
+
+.friend-region-trigger-btn {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  padding: 14px 12px;
+  background: linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%);
+  color: #3730a3;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.friend-region-trigger-btn:hover {
+  filter: brightness(1.02);
 }
 
 .conclusion-share-icon {

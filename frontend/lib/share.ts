@@ -34,23 +34,17 @@ export function buildConclusionSharePayload(result: AnalyzeResponse): ShareData 
 }
 
 export function buildRegionSharePayload(
-  myResult: AnalyzeResponse,
   friendRegion: MacroRegion,
   friendResult: AnalyzeResponse,
 ): ShareData {
-  const myLine = `[내 위치] ${myResult.location.region} · ${myResult.decision.score}점 · ${myResult.decision.signal_label}`;
-  const regionLine = `[권역 요약] ${friendRegion.label} · ${friendResult.decision.score}점 · ${friendResult.decision.signal_label}`;
+  const summary = `${friendRegion.label} · ${friendResult.decision.signal_label} · ${friendResult.decision.score}점`;
   const regionNote = `(${friendRegion.anchor} 인근 기준, 참고용)`;
 
   const text = [
     SHARE_TITLE,
     "",
-    myLine,
-    regionLine,
+    summary,
     regionNote,
-    "",
-    "권역 결과는 참고용입니다.",
-    "정확한 점수는 링크에서 내 위치로 분석해 주세요.",
     "",
     REGION_ACCURACY_NOTICE,
   ].join("\n");
@@ -63,11 +57,10 @@ export function buildRegionSharePayload(
 }
 
 export async function shareRegionComparison(
-  myResult: AnalyzeResponse,
   friendRegion: MacroRegion,
   friendResult: AnalyzeResponse,
 ): Promise<"shared" | "copied" | "cancelled"> {
-  const payload = buildRegionSharePayload(myResult, friendRegion, friendResult);
+  const payload = buildRegionSharePayload(friendRegion, friendResult);
   const fallbackText = [payload.text, payload.url].filter(Boolean).join("\n\n");
 
   if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
