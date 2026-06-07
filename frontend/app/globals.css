@@ -207,6 +207,30 @@ main {
   filter: brightness(1.02);
 }
 
+.friend-region-open-hint {
+  margin: 8px 4px 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--muted);
+  text-align: center;
+}
+
+.friend-region-notice {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: #64748b;
+  text-align: left;
+}
+
+.friend-region-notice--compact {
+  margin-bottom: 12px;
+}
+
 .friend-region-head {
   margin-bottom: 14px;
   text-align: center;
@@ -352,17 +376,6 @@ main {
   color: var(--muted);
 }
 
-.friend-region-share-hook {
-  margin: 0 0 12px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: #fff;
-  border: 1px dashed #cbd5e1;
-  font-size: 0.86rem;
-  line-height: 1.5;
-  text-align: center;
-}
-
 .friend-region-share-btn {
   width: 100%;
   border: none;
@@ -376,6 +389,14 @@ main {
 
 .friend-region-share-btn:hover {
   filter: brightness(1.05);
+}
+
+.friend-region-share-hint {
+  margin: 8px 0 0;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  color: var(--muted);
+  text-align: center;
 }
 
 .friend-region-share-notice {

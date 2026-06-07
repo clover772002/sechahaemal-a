@@ -7,64 +7,30 @@ type ShareData = {
   url?: string;
 };
 
-/** 결과별로 친구에게 자연스럽게 말 걸 수 있는 한 줄 */
-export function buildShareHook(result: AnalyzeResponse): string {
-  const region = result.location.region;
-  const { signal, signal_label, score } = result.decision;
+const SHARE_TITLE = "오늘 세차, 해도 될까?";
 
-  if (signal === "red") {
-    return `우리 동네(${region})는 세차하면 안 된대 ㅋㅋ 니네 동네는?`;
-  }
-  if (signal === "yellow") {
-    return `우리 동네(${region})는 ${signal_label}래 (${score}점). 니네 동네는?`;
-  }
-  return `우리 동네(${region})는 오늘 세차해도 된대! 니네 동네는?`;
-}
+const REGION_ACCURACY_NOTICE = [
+  "※ 권역은 넓어 대략적인 결과입니다.",
+  "정확한 점수·예보·점수 계산은 링크에서",
+  "'내 위치로 분석하기'를 눌러 확인하세요.",
+].join("\n");
+
+const MY_LOCATION_DETAIL_NOTICE = [
+  "강수·미세먼지·점수 계산 등 자세한 내용은",
+  "앱에서 '내 위치로 분석하기'로 확인할 수 있어요.",
+].join("\n");
 
 export function buildConclusionSharePayload(result: AnalyzeResponse): ShareData {
-  const hook = buildShareHook(result);
-  const { location, decision, rain_forecast } = result;
+  const { location, decision } = result;
 
-  const pollenLine =
-    decision.logic.pollen.available && decision.logic.pollen.three_day_worst_label
-      ? `꽃가루: ${decision.logic.pollen.three_day_worst_label}`
-      : null;
-
-  const detail = [
-    `📍 ${location.region} · ${decision.score}점 · ${decision.signal_label}`,
-    `강수 최대 ${rain_forecast.three_day_max_pop}% · 비 예보 ${rain_forecast.rainy_day_count}일`,
-    `미세먼지: ${decision.logic.dust.three_day_worst_label}`,
-    pollenLine,
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  const text = [hook, "", detail, "", "👉 위치 눌러서 니네 동네도 확인해봐"].join("\n");
+  const summary = `${location.region} · ${decision.signal_label} · ${decision.score}점`;
+  const text = [SHARE_TITLE, "", summary, "", MY_LOCATION_DETAIL_NOTICE].join("\n");
 
   return {
-    title: "오늘 세차, 해도 될까?",
+    title: SHARE_TITLE,
     text,
     url: typeof window !== "undefined" ? window.location.href : undefined,
   };
-}
-
-export function buildRegionShareHook(
-  myResult: AnalyzeResponse,
-  friendRegion: MacroRegion,
-  friendResult: AnalyzeResponse,
-): string {
-  const myPlace = myResult.location.region;
-  const myLabel = myResult.decision.signal_label;
-  const friendLabel = friendResult.decision.signal_label;
-  const friendScore = friendResult.decision.score;
-
-  if (friendResult.decision.signal === "red") {
-    return `우리 동네(${myPlace})는 ${myLabel}인데, ${friendRegion.label}은 세차하면 안 된대 ㅋㅋ 니네 동네는?`;
-  }
-  if (friendResult.decision.signal === "yellow") {
-    return `우리 동네(${myPlace})는 ${myLabel}인데, ${friendRegion.label}은 ${friendLabel}래 (${friendScore}점). 니네 동네는?`;
-  }
-  return `우리 동네(${myPlace})는 ${myLabel}인데, ${friendRegion.label}은 세차해도 된대! 니네 동네는?`;
 }
 
 export function buildRegionSharePayload(
@@ -72,17 +38,26 @@ export function buildRegionSharePayload(
   friendRegion: MacroRegion,
   friendResult: AnalyzeResponse,
 ): ShareData {
-  const hook = buildRegionShareHook(myResult, friendRegion, friendResult);
-  const detail = [
-    `📍 내 동네 · ${myResult.decision.score}점 · ${myResult.decision.signal_label}`,
-    `📍 ${friendRegion.label} 권역(${friendRegion.anchor} 기준) · ${friendResult.decision.score}점 · ${friendResult.decision.signal_label}`,
+  const myLine = `[내 위치] ${myResult.location.region} · ${myResult.decision.score}점 · ${myResult.decision.signal_label}`;
+  const regionLine = `[권역 요약] ${friendRegion.label} · ${friendResult.decision.score}점 · ${friendResult.decision.signal_label}`;
+  const regionNote = `(${friendRegion.anchor} 인근 기준, 참고용)`;
+
+  const text = [
+    SHARE_TITLE,
     "",
-    "👉 위치 눌러서 니네 동네도 확인해봐",
+    myLine,
+    regionLine,
+    regionNote,
+    "",
+    "권역 결과는 참고용입니다.",
+    "정확한 점수는 링크에서 내 위치로 분석해 주세요.",
+    "",
+    REGION_ACCURACY_NOTICE,
   ].join("\n");
 
   return {
-    title: "오늘 세차, 해도 될까?",
-    text: [hook, "", detail].join("\n"),
+    title: SHARE_TITLE,
+    text,
     url: typeof window !== "undefined" ? window.location.href : undefined,
   };
 }
