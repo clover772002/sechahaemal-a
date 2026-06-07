@@ -199,7 +199,6 @@ export default function HomePage() {
           <button type="button" className="score-check-btn" onClick={loadAnalysis}>
             내 위치로 분석하기
           </button>
-          <p className="score-check-hint">분석이 끝나면 점수와 결론을 음성으로 들려드려요.</p>
         </section>
       )}
 
