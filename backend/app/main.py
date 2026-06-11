@@ -2,7 +2,6 @@ import asyncio
 import logging
 import time
 
-import httpx
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,7 +12,7 @@ from app.services.coordinates import detect_airkorea_region, find_nearest_statio
 from app.services.decision import evaluate_car_wash
 from app.services.pollen import fetch_pollen_forecast
 from app.services.pollen import season_note
-from app.services.kakao_local import search_nearby_car_washes
+from app.services.car_wash_places import find_nearby_car_washes
 from app.services.weather import (
     fetch_weather_forecast,
     kst_now,
@@ -73,17 +72,11 @@ async def car_wash_nearby(
         return cached
 
     try:
-        items = await search_nearby_car_washes(lat, lng, radius)
-        response = {"items": items, "count": len(items)}
+        response = await find_nearby_car_washes(lat, lng, radius)
         set_cached(cache_key, response, CAR_WASH_CACHE_TTL_SECONDS)
         return response
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
-    except httpx.HTTPStatusError as exc:
-        from app.services.kakao_local import kakao_http_error_message
-
-        logger.exception("카카오 로컬 API 오류")
-        raise HTTPException(status_code=502, detail=kakao_http_error_message(exc)) from exc
     except Exception as exc:
         logger.exception("세차장 검색 실패")
         raise HTTPException(status_code=502, detail="세차장 검색에 실패했습니다.") from exc

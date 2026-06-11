@@ -53,14 +53,15 @@ async def search_nearby_car_washes(
     lng: float,
     radius_m: int = DEFAULT_RADIUS_M,
 ) -> list[dict]:
-    if not settings.kakao_rest_api_key:
+    api_key = settings.get_kakao_rest_api_key()
+    if not api_key:
         raise RuntimeError(
             "KAKAO_REST_API_KEY가 설정되지 않았습니다. "
             "Railway Variables에 카카오 REST API 키를 추가해 주세요."
         )
 
     radius_m = max(500, min(radius_m, MAX_RADIUS_M))
-    headers = {"Authorization": f"KakaoAK {settings.kakao_rest_api_key}"}
+    headers = {"Authorization": f"KakaoAK {api_key}"}
     merged: dict[str, dict] = {}
     last_http_error: httpx.HTTPStatusError | None = None
 

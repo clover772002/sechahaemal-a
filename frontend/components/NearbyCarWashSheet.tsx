@@ -18,6 +18,7 @@ export function NearbyCarWashSheet({ lat, lng, onClose }: NearbyCarWashSheetProp
   const [items, setItems] = useState<CarWashPlace[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dataSource, setDataSource] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -26,7 +27,10 @@ export function NearbyCarWashSheet({ lat, lng, onClose }: NearbyCarWashSheetProp
 
     void fetchNearbyCarWashes(lat, lng)
       .then((data) => {
-        if (!cancelled) setItems(data.items);
+        if (!cancelled) {
+          setItems(data.items);
+          setDataSource(data.source ?? null);
+        }
       })
       .catch((err) => {
         if (!cancelled) {
@@ -73,6 +77,12 @@ export function NearbyCarWashSheet({ lat, lng, onClose }: NearbyCarWashSheetProp
       )}
 
       {!loading && !error && items.length > 0 && (
+        <>
+          {dataSource === "openstreetmap" && (
+            <p className="car-wash-sheet-note">
+              공개 지도 데이터 기준입니다. 일부 세차장은 빠져 있을 수 있어요.
+            </p>
+          )}
         <ul className="car-wash-list">
           {items.map((place) => (
             <li key={place.id} className="car-wash-item">
@@ -97,6 +107,7 @@ export function NearbyCarWashSheet({ lat, lng, onClose }: NearbyCarWashSheetProp
             </li>
           ))}
         </ul>
+        </>
       )}
     </section>
   );

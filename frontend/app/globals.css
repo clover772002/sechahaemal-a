@@ -230,6 +230,14 @@ main {
   padding: 0 4px;
 }
 
+.car-wash-sheet-note {
+  margin: 0 0 10px;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: var(--muted);
+  text-align: center;
+}
+
 .car-wash-sheet-status,
 .car-wash-sheet-error {
   margin: 0;

@@ -38,5 +38,8 @@ class Settings(BaseSettings):
     def get_cors_origins(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
+    def get_kakao_rest_api_key(self) -> str:
+        return self.kakao_rest_api_key.strip().strip('"').strip("'")
+
 
 settings = Settings()
