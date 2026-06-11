@@ -4,13 +4,18 @@ import math
 import httpx
 
 from app.config import settings
-from app.services.kakao_local import build_navigate_url, search_nearby_car_washes
+from app.services.kakao_local import (
+    build_navigate_url,
+    kakao_http_error_message,
+    search_nearby_car_washes,
+)
 
 logger = logging.getLogger(__name__)
 
 OVERPASS_ENDPOINTS = (
-    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
     "https://lz4.overpass-api.de/api/interpreter",
+    "https://overpass-api.de/api/interpreter",
 )
 
 
@@ -23,33 +28,44 @@ def _haversine_m(lat1: float, lng1: float, lat2: float, lng2: float) -> int:
     return int(radius * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a)))
 
 
+async def _fetch_overpass_payload(compact_query: str) -> dict:
+    headers = {"User-Agent": "sechahaemal-a/1.0 (car-wash-nearby)"}
+    last_error: Exception | None = None
+
+    async with httpx.AsyncClient(timeout=45.0, headers=headers) as client:
+        for endpoint in OVERPASS_ENDPOINTS:
+            for attempt in range(2):
+                try:
+                    response = await client.post(
+                        endpoint,
+                        data={"data": compact_query},
+                        headers={**headers, "Content-Type": "application/x-www-form-urlencoded"},
+                    )
+                    response.raise_for_status()
+                    return response.json()
+                except Exception as exc:
+                    last_error = exc
+                    logger.warning(
+                        "Overpass 조회 실패 endpoint=%s attempt=%s err=%s",
+                        endpoint,
+                        attempt + 1,
+                        exc,
+                    )
+
+    raise RuntimeError("OpenStreetMap 조회 실패") from last_error
+
+
 async def _search_overpass_car_washes(lat: float, lng: float, radius_m: int) -> list[dict]:
     query = f"""
-    [out:json][timeout:12];
+    [out:json][timeout:25];
     (
       node["amenity"="car_wash"](around:{radius_m},{lat},{lng});
       way["amenity"="car_wash"](around:{radius_m},{lat},{lng});
     );
     out center 20;
     """
-    payload = None
-    last_error: Exception | None = None
-    headers = {"User-Agent": "sechahaemal-a/1.0 (car-wash-nearby)"}
     compact_query = " ".join(query.split())
-
-    async with httpx.AsyncClient(timeout=25.0, headers=headers) as client:
-        for endpoint in OVERPASS_ENDPOINTS:
-            try:
-                response = await client.get(endpoint, params={"data": compact_query})
-                response.raise_for_status()
-                payload = response.json()
-                break
-            except Exception as exc:
-                last_error = exc
-                logger.warning("Overpass 조회 실패 endpoint=%s err=%s", endpoint, exc)
-
-    if payload is None:
-        raise RuntimeError("OpenStreetMap 조회 실패") from last_error
+    payload = await _fetch_overpass_payload(compact_query)
 
     items: list[dict] = []
     for element in payload.get("elements", []):
@@ -130,10 +146,17 @@ async def find_nearby_car_washes(lat: float, lng: float, radius_m: int = 5000) -
             source = "openstreetmap"
         return {"items": items, "count": len(items), "source": source}
 
+    warning: str | None = None
     if kakao_error is not None:
-        raise RuntimeError(
-            "세차장 검색에 실패했습니다. 카카오 API 키를 확인하거나 잠시 후 다시 시도해 주세요."
-        ) from kakao_error
-    if osm_error is not None:
-        raise RuntimeError("세차장 검색에 실패했습니다. 잠시 후 다시 시도해 주세요.") from osm_error
-    return {"items": [], "count": 0, "source": None}
+        if isinstance(kakao_error, RuntimeError):
+            warning = str(kakao_error)
+        elif isinstance(getattr(kakao_error, "__cause__", None), httpx.HTTPStatusError):
+            warning = kakao_http_error_message(kakao_error.__cause__)
+        else:
+            warning = "카카오 세차장 검색에 실패했습니다."
+    if osm_error is not None and warning is None:
+        warning = "주변 세차장 검색 서버가 바쁩니다. 잠시 후 다시 시도해 주세요."
+    elif osm_error is not None:
+        warning = f"{warning} (공개 지도 검색도 실패했습니다.)"
+
+    return {"items": [], "count": 0, "source": None, "warning": warning}

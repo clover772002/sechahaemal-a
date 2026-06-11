@@ -76,8 +76,6 @@ async def car_wash_nearby(
         if response.get("count", 0) > 0:
             set_cached(cache_key, response, CAR_WASH_CACHE_TTL_SECONDS)
         return response
-    except RuntimeError as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
         logger.exception("세차장 검색 실패")
         raise HTTPException(status_code=502, detail="세차장 검색에 실패했습니다.") from exc

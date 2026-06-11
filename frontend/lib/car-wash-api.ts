@@ -14,7 +14,8 @@ export interface CarWashPlace {
 export interface NearbyCarWashResponse {
   items: CarWashPlace[];
   count: number;
-  source?: "kakao" | "openstreetmap" | "mixed";
+  source?: "kakao" | "openstreetmap" | "mixed" | null;
+  warning?: string | null;
 }
 
 export async function fetchNearbyCarWashes(

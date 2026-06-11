@@ -19,17 +19,20 @@ export function NearbyCarWashSheet({ lat, lng, onClose }: NearbyCarWashSheetProp
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dataSource, setDataSource] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setWarning(null);
 
     void fetchNearbyCarWashes(lat, lng)
       .then((data) => {
         if (!cancelled) {
           setItems(data.items);
           setDataSource(data.source ?? null);
+          setWarning(data.warning ?? null);
         }
       })
       .catch((err) => {
@@ -74,6 +77,7 @@ export function NearbyCarWashSheet({ lat, lng, onClose }: NearbyCarWashSheetProp
 
       {!loading && !error && items.length === 0 && (
         <div className="car-wash-sheet-fallback">
+          {warning && <p className="car-wash-sheet-note">{warning}</p>}
           <p className="car-wash-sheet-status">근처에 세차장을 찾지 못했어요.</p>
           <a
             className="car-wash-fallback-btn"
