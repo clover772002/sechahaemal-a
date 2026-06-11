@@ -9,6 +9,7 @@ import {
   LocationError,
 } from "@/lib/api";
 import { FriendRegionExplorer } from "@/components/FriendRegionExplorer";
+import { NearbyCarWashSheet } from "@/components/NearbyCarWashSheet";
 import { OnboardingGuide } from "@/components/OnboardingGuide";
 import { shareConclusion } from "@/lib/share";
 import {
@@ -88,6 +89,7 @@ export default function HomePage() {
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [shareNoticeSource, setShareNoticeSource] = useState<"summary" | "logic" | null>(null);
   const [friendRegionOpen, setFriendRegionOpen] = useState(false);
+  const [carWashOpen, setCarWashOpen] = useState(false);
   const analysisInFlightRef = useRef(false);
 
   const openLogicSection = () => {
@@ -160,6 +162,7 @@ export default function HomePage() {
         });
       setShowLogicSection(false);
       setFriendRegionOpen(false);
+      setCarWashOpen(false);
       setShareNotice(null);
       setShareNoticeSource(null);
     } catch (err) {
@@ -247,11 +250,26 @@ export default function HomePage() {
               {shareNotice && shareNoticeSource === "summary" && (
                 <p className="conclusion-share-notice">{shareNotice}</p>
               )}
+              <button
+                type="button"
+                className="car-wash-open-btn"
+                onClick={() => setCarWashOpen((prev) => !prev)}
+              >
+                가까운 세차장
+              </button>
               <button type="button" className="conclusion-logic-link" onClick={openLogicSection}>
                 점수 로직이 궁금하다면?
               </button>
             </div>
           </section>
+
+          {carWashOpen && (
+            <NearbyCarWashSheet
+              lat={result.location.lat}
+              lng={result.location.lng}
+              onClose={() => setCarWashOpen(false)}
+            />
+          )}
 
           {friendRegionOpen && (
             <FriendRegionExplorer onClose={() => setFriendRegionOpen(false)} />

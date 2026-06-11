@@ -183,6 +183,126 @@ main {
   text-align: center;
 }
 
+.car-wash-open-btn {
+  width: 100%;
+  margin-top: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  background: #fff;
+  color: #334155;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.car-wash-open-btn:hover {
+  background: #f8fafc;
+}
+
+.car-wash-sheet {
+  margin-bottom: 14px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+}
+
+.car-wash-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.car-wash-sheet-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.car-wash-sheet-close {
+  border: none;
+  background: none;
+  color: #94a3b8;
+  font-size: 1.4rem;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.car-wash-sheet-status,
+.car-wash-sheet-error {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.car-wash-sheet-error {
+  color: #dc2626;
+}
+
+.car-wash-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.car-wash-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.car-wash-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.car-wash-item-name {
+  margin: 0 0 4px;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.car-wash-item-address {
+  margin: 0 0 6px;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.car-wash-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.74rem;
+  color: #64748b;
+}
+
+.car-wash-navigate-btn {
+  flex-shrink: 0;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.car-wash-navigate-btn:hover {
+  background: #dbeafe;
+}
+
 .friend-region-card {
   margin-bottom: 14px;
   padding: 18px 16px;

@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     pollen_api_base_url: str = (
         "https://apis.data.go.kr/1360000/HealthWthrIdxServiceV3"
     )
+    kakao_rest_api_key: str = ""
     cors_origins: str = (
         "http://localhost:3000,http://127.0.0.1:3000,"
         "http://localhost:3001,http://127.0.0.1:3001"
