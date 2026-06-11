@@ -13,13 +13,10 @@ from app.services.kakao_local import (
 
 logger = logging.getLogger(__name__)
 
-OVERPASS_ENDPOINTS = (
-    "https://overpass.kumi.systems/api/interpreter",
-    "https://lz4.overpass-api.de/api/interpreter",
-)
+NOMINATIM_SEARCH_URL = "https://nominatim.openstreetmap.org/search"
+NOMINATIM_USER_AGENT = "sechahaemal-a/1.0 (https://sechahaemal-a.vercel.app)"
 
-SEARCH_BUDGET_SECONDS = 18.0
-OVERPASS_CLIENT_TIMEOUT_SECONDS = 16.0
+SEARCH_BUDGET_SECONDS = 16.0
 
 
 def _haversine_m(lat1: float, lng1: float, lat2: float, lng2: float) -> int:
@@ -31,72 +28,75 @@ def _haversine_m(lat1: float, lng1: float, lat2: float, lng2: float) -> int:
     return int(radius * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a)))
 
 
-async def _fetch_overpass_payload(compact_query: str) -> dict:
-    headers = {"User-Agent": "sechahaemal-a/1.0 (car-wash-nearby)"}
-    last_error: Exception | None = None
-
-    async with httpx.AsyncClient(timeout=OVERPASS_CLIENT_TIMEOUT_SECONDS, headers=headers) as client:
-        for endpoint in OVERPASS_ENDPOINTS:
-            try:
-                response = await client.post(
-                    endpoint,
-                    data={"data": compact_query},
-                    headers={**headers, "Content-Type": "application/x-www-form-urlencoded"},
-                )
-                response.raise_for_status()
-                return response.json()
-            except Exception as exc:
-                last_error = exc
-                logger.warning("Overpass 조회 실패 endpoint=%s err=%s", endpoint, exc)
-
-    raise RuntimeError("OpenStreetMap 조회 실패") from last_error
+def _viewbox_for_radius(lat: float, lng: float, radius_m: int) -> str:
+    dlat = radius_m / 111_000
+    cos_lat = max(0.2, math.cos(math.radians(lat)))
+    dlng = radius_m / (111_000 * cos_lat)
+    left = lng - dlng
+    right = lng + dlng
+    top = lat + dlat
+    bottom = lat - dlat
+    return f"{left},{top},{right},{bottom}"
 
 
-async def _search_overpass_car_washes(lat: float, lng: float, radius_m: int) -> list[dict]:
-    query = f"""
-    [out:json][timeout:10];
-    (
-      node["amenity"="car_wash"](around:{radius_m},{lat},{lng});
-      way["amenity"="car_wash"](around:{radius_m},{lat},{lng});
-      node["name"~"세차",i](around:{radius_m},{lat},{lng});
-      way["name"~"세차",i](around:{radius_m},{lat},{lng});
-    );
-    out center 25;
-    """
-    compact_query = " ".join(query.split())
-    payload = await _fetch_overpass_payload(compact_query)
+def _parse_nominatim_row(row: dict, lat: float, lng: float, radius_m: int) -> dict | None:
+    if row.get("type") != "car_wash":
+        return None
+    try:
+        place_lat = float(row["lat"])
+        place_lng = float(row["lon"])
+    except (KeyError, TypeError, ValueError):
+        return None
 
-    items: list[dict] = []
-    for element in payload.get("elements", []):
-        tags = element.get("tags") or {}
-        name = tags.get("name") or tags.get("brand") or "세차장"
-        if element.get("type") == "node":
-            place_lat = element.get("lat")
-            place_lng = element.get("lon")
-        else:
-            center = element.get("center") or {}
-            place_lat = center.get("lat")
-            place_lng = center.get("lon")
-        if place_lat is None or place_lng is None:
-            continue
+    distance_m = _haversine_m(lat, lng, place_lat, place_lng)
+    if distance_m > radius_m:
+        return None
 
-        place_lat = float(place_lat)
-        place_lng = float(place_lng)
-        address = tags.get("addr:full") or tags.get("addr:street") or ""
-        items.append(
-            {
-                "id": f"osm-{element.get('type')}-{element.get('id')}",
-                "name": name,
-                "address": address,
-                "lat": place_lat,
-                "lng": place_lng,
-                "phone": tags.get("phone") or None,
-                "distance_m": _haversine_m(lat, lng, place_lat, place_lng),
-                "navigate_url": build_navigate_url(name, place_lat, place_lng),
-                "source": "openstreetmap",
-            }
-        )
+    osm_type = row.get("osm_type") or "node"
+    osm_id = row.get("osm_id")
+    if osm_id is None:
+        return None
 
+    raw_name = (row.get("name") or "").strip()
+    display_name = (row.get("display_name") or "").strip()
+    name = raw_name or (display_name.split(",")[0].strip() if display_name else "") or "세차장"
+    address = display_name if display_name and display_name != name else ""
+
+    return {
+        "id": f"osm-{osm_type}-{osm_id}",
+        "name": name,
+        "address": address,
+        "lat": place_lat,
+        "lng": place_lng,
+        "phone": None,
+        "distance_m": distance_m,
+        "navigate_url": build_navigate_url(name, place_lat, place_lng),
+        "source": "openstreetmap",
+    }
+
+
+async def _search_nominatim_car_washes(lat: float, lng: float, radius_m: int) -> list[dict]:
+    headers = {"User-Agent": NOMINATIM_USER_AGENT}
+    merged: dict[str, dict] = {}
+
+    params = {
+        "q": "car wash",
+        "format": "json",
+        "limit": 25,
+        "viewbox": _viewbox_for_radius(lat, lng, radius_m),
+        "bounded": 1,
+        "countrycodes": "kr",
+    }
+    async with httpx.AsyncClient(timeout=10.0, headers=headers) as client:
+        response = await client.get(NOMINATIM_SEARCH_URL, params=params)
+        response.raise_for_status()
+        for row in response.json():
+            item = _parse_nominatim_row(row, lat, lng, radius_m)
+            if item is None:
+                continue
+            merged[item["id"]] = item
+
+    items = list(merged.values())
     items.sort(key=lambda row: row["distance_m"])
     return items[:15]
 
@@ -129,9 +129,9 @@ async def _try_kakao(lat: float, lng: float, radius_m: int) -> tuple[list[dict],
 
 async def _try_osm(lat: float, lng: float, radius_m: int) -> tuple[list[dict], Exception | None]:
     try:
-        return await asyncio.wait_for(_search_overpass_car_washes(lat, lng, radius_m), timeout=15.0), None
+        return await asyncio.wait_for(_search_nominatim_car_washes(lat, lng, radius_m), timeout=11.0), None
     except Exception as exc:
-        logger.warning("OpenStreetMap 세차장 검색 실패 radius=%s: %s", radius_m, exc)
+        logger.warning("OpenStreetMap(Nominatim) 세차장 검색 실패 radius=%s: %s", radius_m, exc)
         return [], exc
 
 
@@ -167,20 +167,25 @@ def _build_car_wash_response(items: list[dict], radius_m: int) -> dict:
     return response
 
 
+def _log_search_errors(kakao_error: Exception | None, osm_error: Exception | None) -> None:
+    if kakao_error is None:
+        return
+    if isinstance(kakao_error, RuntimeError):
+        logger.warning("카카오 세차장 검색 오류: %s", kakao_error)
+        return
+    if isinstance(getattr(kakao_error, "__cause__", None), httpx.HTTPStatusError):
+        logger.warning("카카오 세차장 검색 오류: %s", kakao_http_error_message(kakao_error.__cause__))
+        return
+    logger.warning("카카오 세차장 검색 오류: %s", kakao_error)
+
+
 def _build_warning(kakao_error: Exception | None, osm_error: Exception | None) -> str | None:
-    warning: str | None = None
+    _log_search_errors(kakao_error, osm_error)
+    if osm_error is not None:
+        return "세차장 목록을 불러오지 못했어요. 아래 카카오맵에서 직접 찾아보세요."
     if kakao_error is not None:
-        if isinstance(kakao_error, RuntimeError):
-            warning = str(kakao_error)
-        elif isinstance(getattr(kakao_error, "__cause__", None), httpx.HTTPStatusError):
-            warning = kakao_http_error_message(kakao_error.__cause__)
-        else:
-            warning = "카카오 세차장 검색에 실패했습니다."
-    if osm_error is not None and warning is None:
-        warning = "주변 세차장 검색 서버가 바쁩니다. 잠시 후 다시 시도해 주세요."
-    elif osm_error is not None:
-        warning = f"{warning} (공개 지도 검색도 실패했습니다.)"
-    return warning
+        return "일부 세차장 정보가 빠져 있을 수 있어요."
+    return None
 
 
 async def find_nearby_car_washes(lat: float, lng: float, radius_m: int = 5000) -> dict:
