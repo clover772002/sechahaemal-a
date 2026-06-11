@@ -5,6 +5,7 @@ import {
   buildKakaoMapSearchFallbackUrl,
   fetchNearbyCarWashes,
   formatDistance,
+  sortCarWashesByDistance,
   type CarWashPlace,
 } from "@/lib/car-wash-api";
 
@@ -32,7 +33,7 @@ export function NearbyCarWashSheet({ lat, lng, onClose }: NearbyCarWashSheetProp
     void fetchNearbyCarWashes(lat, lng)
       .then((data) => {
         if (!cancelled) {
-          setItems(data.items);
+          setItems(sortCarWashesByDistance(data.items));
           setDataSource(data.source ?? null);
           setWarning(data.warning ?? null);
           setSearchRadiusM(data.search_radius_m ?? null);

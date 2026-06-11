@@ -96,12 +96,19 @@ async def _search_nominatim_car_washes(lat: float, lng: float, radius_m: int) ->
                 continue
             merged[item["id"]] = item
 
-    items = list(merged.values())
+    return _sort_places_by_distance(list(merged.values()), lat, lng)[:15]
+
+
+def _sort_places_by_distance(items: list[dict], lat: float, lng: float) -> list[dict]:
+    for item in items:
+        item["distance_m"] = _haversine_m(lat, lng, item["lat"], item["lng"])
     items.sort(key=lambda row: row["distance_m"])
-    return items[:15]
+    return items
 
 
-def _merge_car_wash_items(kakao_items: list[dict], osm_items: list[dict]) -> list[dict]:
+def _merge_car_wash_items(
+    kakao_items: list[dict], osm_items: list[dict], lat: float, lng: float
+) -> list[dict]:
     merged = list(kakao_items)
     for osm_item in osm_items:
         osm_lat, osm_lng = osm_item["lat"], osm_item["lng"]
@@ -110,8 +117,7 @@ def _merge_car_wash_items(kakao_items: list[dict], osm_items: list[dict]) -> lis
         )
         if not is_duplicate:
             merged.append(osm_item)
-    merged.sort(key=lambda row: row.get("distance_m") if row.get("distance_m") is not None else 99999)
-    return merged[:15]
+    return _sort_places_by_distance(merged, lat, lng)[:15]
 
 
 async def _try_kakao(lat: float, lng: float, radius_m: int) -> tuple[list[dict], Exception | None]:
@@ -144,10 +150,11 @@ async def _search_car_washes_at_radius(
     )
     kakao_items, kakao_error = kakao_result
     osm_items, osm_error = osm_result
-    return _merge_car_wash_items(kakao_items, osm_items), kakao_error, osm_error
+    return _merge_car_wash_items(kakao_items, osm_items, lat, lng), kakao_error, osm_error
 
 
-def _build_car_wash_response(items: list[dict], radius_m: int) -> dict:
+def _build_car_wash_response(items: list[dict], radius_m: int, lat: float, lng: float) -> dict:
+    items = _sort_places_by_distance(items, lat, lng)[:15]
     response: dict = {
         "items": items,
         "count": len(items),
@@ -204,8 +211,8 @@ async def find_nearby_car_washes(lat: float, lng: float, radius_m: int = 5000) -
         osm_error = TimeoutError("세차장 검색 시간 초과")
 
     if items:
-        return _build_car_wash_response(items, search_radius)
+        return _build_car_wash_response(items, search_radius, lat, lng)
 
-    response = _build_car_wash_response([], search_radius)
+    response = _build_car_wash_response([], search_radius, lat, lng)
     response["warning"] = _build_warning(kakao_error, osm_error)
     return response

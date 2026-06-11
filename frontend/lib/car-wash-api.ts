@@ -43,6 +43,14 @@ export async function fetchNearbyCarWashes(
   }
 }
 
+export function sortCarWashesByDistance(items: CarWashPlace[]): CarWashPlace[] {
+  return [...items].sort((a, b) => {
+    const aDistance = a.distance_m ?? Number.POSITIVE_INFINITY;
+    const bDistance = b.distance_m ?? Number.POSITIVE_INFINITY;
+    return aDistance - bDistance;
+  });
+}
+
 export function formatDistance(meters: number | null): string {
   if (meters === null) return "";
   if (meters < 1000) return `${meters}m`;
