@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { CAR_WASH_RESULT_LIMIT } from "@/lib/car-wash-api";
+
 const KAKAO_KEYWORD_URL = "https://dapi.kakao.com/v2/local/search/keyword.json";
 const SEARCH_QUERIES = ["세차장", "셀프세차", "손세차"] as const;
 const SEARCH_RADIUS_M = 10_000;
@@ -112,7 +114,7 @@ export async function GET(request: NextRequest) {
 
   const items = [...merged.values()].sort(
     (a, b) => (a.distance_m as number) - (b.distance_m as number),
-  ).slice(0, 15);
+  ).slice(0, CAR_WASH_RESULT_LIMIT);
 
   if (items.length === 0 && (lastStatus === 401 || lastStatus === 403)) {
     return NextResponse.json({

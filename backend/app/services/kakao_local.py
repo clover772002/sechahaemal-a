@@ -12,6 +12,7 @@ KAKAO_KEYWORD_SEARCH_URL = "https://dapi.kakao.com/v2/local/search/keyword.json"
 DEFAULT_RADIUS_M = 5000
 MAX_RADIUS_M = 10000
 SEARCH_QUERIES = ("세차장", "셀프세차", "손세차", "세차")
+MAX_CAR_WASH_RESULTS = 5
 
 
 def build_navigate_url(
@@ -146,4 +147,4 @@ async def search_nearby_car_washes(
 
     items = list(merged.values())
     items.sort(key=lambda row: row.get("distance_m") if row.get("distance_m") is not None else 99999)
-    return items[:15]
+    return items[:MAX_CAR_WASH_RESULTS]

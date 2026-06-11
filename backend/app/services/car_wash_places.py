@@ -17,6 +17,7 @@ NOMINATIM_SEARCH_URL = "https://nominatim.openstreetmap.org/search"
 NOMINATIM_USER_AGENT = "sechahaemal-a/1.0 (https://sechahaemal-a.vercel.app)"
 
 SEARCH_BUDGET_SECONDS = 16.0
+MAX_CAR_WASH_RESULTS = 5
 
 
 def _haversine_m(lat1: float, lng1: float, lat2: float, lng2: float) -> int:
@@ -96,7 +97,7 @@ async def _search_nominatim_car_washes(lat: float, lng: float, radius_m: int) ->
                 continue
             merged[item["id"]] = item
 
-    return _sort_places_by_distance(list(merged.values()), lat, lng)[:15]
+    return _sort_places_by_distance(list(merged.values()), lat, lng)[:MAX_CAR_WASH_RESULTS]
 
 
 def _sort_places_by_distance(items: list[dict], lat: float, lng: float) -> list[dict]:
@@ -117,7 +118,7 @@ def _merge_car_wash_items(
         )
         if not is_duplicate:
             merged.append(osm_item)
-    return _sort_places_by_distance(merged, lat, lng)[:15]
+    return _sort_places_by_distance(merged, lat, lng)[:MAX_CAR_WASH_RESULTS]
 
 
 async def _try_kakao(lat: float, lng: float, radius_m: int) -> tuple[list[dict], Exception | None]:
@@ -154,7 +155,7 @@ async def _search_car_washes_at_radius(
 
 
 def _build_car_wash_response(items: list[dict], radius_m: int, lat: float, lng: float) -> dict:
-    items = _sort_places_by_distance(items, lat, lng)[:15]
+    items = _sort_places_by_distance(items, lat, lng)[:MAX_CAR_WASH_RESULTS]
     response: dict = {
         "items": items,
         "count": len(items),

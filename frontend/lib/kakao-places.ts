@@ -1,5 +1,5 @@
 import type { CarWashPlace } from "./car-wash-api";
-import { sortCarWashesByDistance } from "./car-wash-api";
+import { CAR_WASH_RESULT_LIMIT, sortCarWashesByDistance } from "./car-wash-api";
 
 const KAKAO_SDK_URL = "https://dapi.kakao.com/v2/maps/sdk.js";
 const SEARCH_QUERIES = ["세차장", "셀프세차", "손세차"] as const;
@@ -157,5 +157,5 @@ export async function searchKakaoCarWashes(lat: number, lng: number): Promise<Ca
     }
   }
 
-  return sortCarWashesByDistance([...merged.values()]).slice(0, 15);
+  return sortCarWashesByDistance([...merged.values()]).slice(0, CAR_WASH_RESULT_LIMIT);
 }
