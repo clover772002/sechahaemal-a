@@ -1,4 +1,5 @@
 import type { AnalyzeResponse } from "./types";
+import { toFetchErrorMessage } from "./fetch-error";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 
@@ -20,10 +21,7 @@ export async function fetchAnalysis(lat: number, lng: number): Promise<AnalyzeRe
     }
     return response.json();
   } catch (err) {
-    if (err instanceof DOMException && err.name === "TimeoutError") {
-      throw new Error("예보 요청 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.");
-    }
-    throw err;
+    throw new Error(toFetchErrorMessage(err, "분석에 실패했습니다."));
   }
 }
 

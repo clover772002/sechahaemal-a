@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import math
 
@@ -15,8 +16,10 @@ logger = logging.getLogger(__name__)
 OVERPASS_ENDPOINTS = (
     "https://overpass.kumi.systems/api/interpreter",
     "https://lz4.overpass-api.de/api/interpreter",
-    "https://overpass-api.de/api/interpreter",
 )
+
+SEARCH_BUDGET_SECONDS = 14.0
+OVERPASS_CLIENT_TIMEOUT_SECONDS = 12.0
 
 
 def _haversine_m(lat1: float, lng1: float, lat2: float, lng2: float) -> int:
@@ -32,32 +35,26 @@ async def _fetch_overpass_payload(compact_query: str) -> dict:
     headers = {"User-Agent": "sechahaemal-a/1.0 (car-wash-nearby)"}
     last_error: Exception | None = None
 
-    async with httpx.AsyncClient(timeout=45.0, headers=headers) as client:
+    async with httpx.AsyncClient(timeout=OVERPASS_CLIENT_TIMEOUT_SECONDS, headers=headers) as client:
         for endpoint in OVERPASS_ENDPOINTS:
-            for attempt in range(2):
-                try:
-                    response = await client.post(
-                        endpoint,
-                        data={"data": compact_query},
-                        headers={**headers, "Content-Type": "application/x-www-form-urlencoded"},
-                    )
-                    response.raise_for_status()
-                    return response.json()
-                except Exception as exc:
-                    last_error = exc
-                    logger.warning(
-                        "Overpass 조회 실패 endpoint=%s attempt=%s err=%s",
-                        endpoint,
-                        attempt + 1,
-                        exc,
-                    )
+            try:
+                response = await client.post(
+                    endpoint,
+                    data={"data": compact_query},
+                    headers={**headers, "Content-Type": "application/x-www-form-urlencoded"},
+                )
+                response.raise_for_status()
+                return response.json()
+            except Exception as exc:
+                last_error = exc
+                logger.warning("Overpass 조회 실패 endpoint=%s err=%s", endpoint, exc)
 
     raise RuntimeError("OpenStreetMap 조회 실패") from last_error
 
 
 async def _search_overpass_car_washes(lat: float, lng: float, radius_m: int) -> list[dict]:
     query = f"""
-    [out:json][timeout:25];
+    [out:json][timeout:10];
     (
       node["amenity"="car_wash"](around:{radius_m},{lat},{lng});
       way["amenity"="car_wash"](around:{radius_m},{lat},{lng});
@@ -117,38 +114,40 @@ def _merge_car_wash_items(kakao_items: list[dict], osm_items: list[dict]) -> lis
     return merged[:15]
 
 
+async def _try_kakao(lat: float, lng: float, radius_m: int) -> tuple[list[dict], Exception | None]:
+    if not settings.get_kakao_rest_api_key():
+        return [], None
+    try:
+        items = await asyncio.wait_for(search_nearby_car_washes(lat, lng, radius_m), timeout=6.0)
+        for item in items:
+            item["source"] = "kakao"
+        return items, None
+    except Exception as exc:
+        logger.warning("카카오 세차장 검색 실패 radius=%s: %s", radius_m, exc)
+        return [], exc
+
+
+async def _try_osm(lat: float, lng: float, radius_m: int) -> tuple[list[dict], Exception | None]:
+    try:
+        return await asyncio.wait_for(_search_overpass_car_washes(lat, lng, radius_m), timeout=11.0), None
+    except Exception as exc:
+        logger.warning("OpenStreetMap 세차장 검색 실패 radius=%s: %s", radius_m, exc)
+        return [], exc
+
+
 async def _search_car_washes_at_radius(
     lat: float, lng: float, radius_m: int
 ) -> tuple[list[dict], Exception | None, Exception | None]:
-    kakao_items: list[dict] = []
-    osm_items: list[dict] = []
-    kakao_error: Exception | None = None
-    osm_error: Exception | None = None
-
-    if settings.get_kakao_rest_api_key():
-        try:
-            kakao_items = await search_nearby_car_washes(lat, lng, radius_m)
-            for item in kakao_items:
-                item["source"] = "kakao"
-        except Exception as exc:
-            kakao_error = exc
-            logger.warning("카카오 세차장 검색 실패 radius=%s: %s", radius_m, exc)
-
-    try:
-        osm_items = await _search_overpass_car_washes(lat, lng, radius_m)
-    except Exception as exc:
-        osm_error = exc
-        logger.warning("OpenStreetMap 세차장 검색 실패 radius=%s: %s", radius_m, exc)
-
+    kakao_result, osm_result = await asyncio.gather(
+        _try_kakao(lat, lng, radius_m),
+        _try_osm(lat, lng, radius_m),
+    )
+    kakao_items, kakao_error = kakao_result
+    osm_items, osm_error = osm_result
     return _merge_car_wash_items(kakao_items, osm_items), kakao_error, osm_error
 
 
-def _build_car_wash_response(
-    items: list[dict],
-    kakao_items_count: int,
-    osm_items_count: int,
-    radius_m: int,
-) -> dict:
+def _build_car_wash_response(items: list[dict], radius_m: int) -> dict:
     response: dict = {
         "items": items,
         "count": len(items),
@@ -157,34 +156,18 @@ def _build_car_wash_response(
     }
     if not items:
         return response
-    if kakao_items_count and osm_items_count:
+    kakao_count = sum(1 for row in items if row.get("source") == "kakao")
+    osm_count = len(items) - kakao_count
+    if kakao_count and osm_count:
         response["source"] = "mixed"
-    elif kakao_items_count:
+    elif kakao_count:
         response["source"] = "kakao"
     else:
         response["source"] = "openstreetmap"
     return response
 
 
-async def find_nearby_car_washes(lat: float, lng: float, radius_m: int = 5000) -> dict:
-    radii = [radius_m]
-    if radius_m < 10_000:
-        radii.append(10_000)
-
-    kakao_error: Exception | None = None
-    osm_error: Exception | None = None
-    last_items: list[dict] = []
-    last_radius = radius_m
-
-    for search_radius in radii:
-        items, kakao_error, osm_error = await _search_car_washes_at_radius(lat, lng, search_radius)
-        last_items = items
-        last_radius = search_radius
-        if items:
-            kakao_count = sum(1 for row in items if row.get("source") == "kakao")
-            osm_count = len(items) - kakao_count
-            return _build_car_wash_response(items, kakao_count, osm_count, search_radius)
-
+def _build_warning(kakao_error: Exception | None, osm_error: Exception | None) -> str | None:
     warning: str | None = None
     if kakao_error is not None:
         if isinstance(kakao_error, RuntimeError):
@@ -197,7 +180,33 @@ async def find_nearby_car_washes(lat: float, lng: float, radius_m: int = 5000) -
         warning = "주변 세차장 검색 서버가 바쁩니다. 잠시 후 다시 시도해 주세요."
     elif osm_error is not None:
         warning = f"{warning} (공개 지도 검색도 실패했습니다.)"
+    return warning
 
-    response = _build_car_wash_response(last_items, 0, 0, last_radius)
-    response["warning"] = warning
+
+async def find_nearby_car_washes(lat: float, lng: float, radius_m: int = 5000) -> dict:
+    radii = [radius_m]
+    if radius_m < 10_000:
+        radii.append(10_000)
+
+    kakao_error: Exception | None = None
+    osm_error: Exception | None = None
+    last_radius = radius_m
+
+    for search_radius in radii:
+        last_radius = search_radius
+        try:
+            items, kakao_error, osm_error = await asyncio.wait_for(
+                _search_car_washes_at_radius(lat, lng, search_radius),
+                timeout=SEARCH_BUDGET_SECONDS,
+            )
+        except TimeoutError:
+            logger.warning("세차장 검색 시간 초과 radius=%s", search_radius)
+            items = []
+            osm_error = TimeoutError("세차장 검색 시간 초과")
+
+        if items:
+            return _build_car_wash_response(items, search_radius)
+
+    response = _build_car_wash_response([], last_radius)
+    response["warning"] = _build_warning(kakao_error, osm_error)
     return response

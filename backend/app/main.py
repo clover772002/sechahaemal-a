@@ -72,10 +72,19 @@ async def car_wash_nearby(
         return cached
 
     try:
-        response = await find_nearby_car_washes(lat, lng, radius)
+        response = await asyncio.wait_for(find_nearby_car_washes(lat, lng, radius), timeout=28.0)
         if response.get("count", 0) > 0:
             set_cached(cache_key, response, CAR_WASH_CACHE_TTL_SECONDS)
         return response
+    except TimeoutError as exc:
+        logger.warning("세차장 검색 API 시간 초과 lat=%s lng=%s", lat, lng)
+        return {
+            "items": [],
+            "count": 0,
+            "source": None,
+            "search_radius_m": radius,
+            "warning": "세차장 검색이 지연되고 있습니다. 잠시 후 다시 시도하거나 카카오맵을 이용해 주세요.",
+        }
     except Exception as exc:
         logger.exception("세차장 검색 실패")
         raise HTTPException(status_code=502, detail="세차장 검색에 실패했습니다.") from exc

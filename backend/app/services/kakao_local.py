@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from urllib.parse import quote
 
@@ -65,60 +66,66 @@ async def search_nearby_car_washes(
     merged: dict[str, dict] = {}
     last_http_error: httpx.HTTPStatusError | None = None
 
-    async with httpx.AsyncClient(timeout=8.0) as client:
-        for query in SEARCH_QUERIES:
-            params = {
-                "query": query,
-                "x": lng,
-                "y": lat,
-                "radius": radius_m,
-                "sort": "distance",
-                "size": 15,
-            }
-            try:
-                response = await client.get(KAKAO_KEYWORD_SEARCH_URL, headers=headers, params=params)
-                response.raise_for_status()
-            except httpx.HTTPStatusError as exc:
-                last_http_error = exc
-                logger.warning("카카오 검색 실패 query=%s status=%s", query, exc.response.status_code)
+    async def fetch_query(client: httpx.AsyncClient, query: str) -> tuple[str, dict | None, httpx.HTTPStatusError | None]:
+        params = {
+            "query": query,
+            "x": lng,
+            "y": lat,
+            "radius": radius_m,
+            "sort": "distance",
+            "size": 15,
+        }
+        try:
+            response = await client.get(KAKAO_KEYWORD_SEARCH_URL, headers=headers, params=params)
+            response.raise_for_status()
+            return query, response.json(), None
+        except httpx.HTTPStatusError as exc:
+            logger.warning("카카오 검색 실패 query=%s status=%s", query, exc.response.status_code)
+            return query, None, exc
+
+    async with httpx.AsyncClient(timeout=4.0) as client:
+        results = await asyncio.gather(*(fetch_query(client, query) for query in SEARCH_QUERIES))
+
+    for _query, payload, http_error in results:
+        if http_error is not None:
+            last_http_error = http_error
+        if not payload:
+            continue
+
+        for doc in payload.get("documents", []):
+            place_id = doc.get("id")
+            if not place_id:
                 continue
 
-            payload = response.json()
+            try:
+                place_lat = float(doc["y"])
+                place_lng = float(doc["x"])
+            except (KeyError, TypeError, ValueError):
+                continue
 
-            for doc in payload.get("documents", []):
-                place_id = doc.get("id")
-                if not place_id:
-                    continue
+            address = doc.get("road_address_name") or doc.get("address_name") or ""
+            distance_m = _parse_distance_meters(doc.get("distance"))
+            item = {
+                "id": place_id,
+                "name": doc.get("place_name", "세차장"),
+                "address": address,
+                "lat": place_lat,
+                "lng": place_lng,
+                "phone": doc.get("phone") or None,
+                "distance_m": distance_m,
+                "navigate_url": build_navigate_url(
+                    doc.get("place_name", "세차장"),
+                    place_lat,
+                    place_lng,
+                ),
+            }
 
-                try:
-                    place_lat = float(doc["y"])
-                    place_lng = float(doc["x"])
-                except (KeyError, TypeError, ValueError):
-                    continue
-
-                address = doc.get("road_address_name") or doc.get("address_name") or ""
-                distance_m = _parse_distance_meters(doc.get("distance"))
-                item = {
-                    "id": place_id,
-                    "name": doc.get("place_name", "세차장"),
-                    "address": address,
-                    "lat": place_lat,
-                    "lng": place_lng,
-                    "phone": doc.get("phone") or None,
-                    "distance_m": distance_m,
-                    "navigate_url": build_navigate_url(
-                        doc.get("place_name", "세차장"),
-                        place_lat,
-                        place_lng,
-                    ),
-                }
-
-                existing = merged.get(place_id)
-                if existing is None or (
-                    distance_m is not None
-                    and (existing.get("distance_m") is None or distance_m < existing["distance_m"])
-                ):
-                    merged[place_id] = item
+            existing = merged.get(place_id)
+            if existing is None or (
+                distance_m is not None
+                and (existing.get("distance_m") is None or distance_m < existing["distance_m"])
+            ):
+                merged[place_id] = item
 
     if not merged:
         if last_http_error is not None:
