@@ -9,6 +9,7 @@ import {
   sortCarWashesByDistance,
   type CarWashPlace,
 } from "@/lib/car-wash-api";
+import { isKakaoPlacesSearchAvailable, searchKakaoCarWashes } from "@/lib/kakao-places";
 
 type NearbyCarWashSheetProps = {
   lat: number;
@@ -31,23 +32,40 @@ export function NearbyCarWashSheet({ lat, lng, onClose }: NearbyCarWashSheetProp
     setError(null);
     setWarning(null);
 
-    void fetchNearbyCarWashes(lat, lng)
-      .then((data) => {
+    const loadPlaces = async () => {
+      try {
+        if (isKakaoPlacesSearchAvailable()) {
+          try {
+            const kakaoItems = await searchKakaoCarWashes(lat, lng);
+            if (!cancelled && kakaoItems.length > 0) {
+              setItems(kakaoItems);
+              setDataSource("kakao");
+              setWarning(null);
+              setSearchRadiusM(10_000);
+              return;
+            }
+          } catch {
+            // SDK 실패 시 서버 검색으로 폴백
+          }
+        }
+
+        const data = await fetchNearbyCarWashes(lat, lng);
         if (!cancelled) {
           setItems(sortCarWashesByDistance(data.items));
           setDataSource(data.source ?? null);
           setWarning(data.warning ?? null);
           setSearchRadiusM(data.search_radius_m ?? null);
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "세차장을 불러오지 못했습니다.");
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    };
+
+    void loadPlaces();
 
     return () => {
       cancelled = true;
@@ -110,9 +128,14 @@ export function NearbyCarWashSheet({ lat, lng, onClose }: NearbyCarWashSheetProp
 
       {!loading && !error && items.length > 0 && (
         <>
-          {(dataSource === "openstreetmap" || dataSource === "mixed") && (
+          {dataSource === "openstreetmap" && (
             <p className="car-wash-sheet-note">
-              공개 지도 데이터가 포함되어 있어요. 일부 세차장은 빠져 있을 수 있습니다.
+              공개 지도에 등록된 곳만 보여요. 카카오맵보다 적을 수 있습니다.
+            </p>
+          )}
+          {dataSource === "mixed" && (
+            <p className="car-wash-sheet-note">
+              공개 지도 데이터가 일부 포함되어 있어요.
             </p>
           )}
         <ul className="car-wash-list">

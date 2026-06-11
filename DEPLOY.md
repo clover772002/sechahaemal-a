@@ -66,8 +66,20 @@ https://YOUR-SERVICE.up.railway.app/health
 | `GOOGLE_CLIENT_ID` | Google OAuth 클라이언트 ID |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth 시크릿 |
 | `NEXT_PUBLIC_API_URL` | `https://YOUR-SERVICE.up.railway.app` |
+| `NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY` | 카카오 **JavaScript 키** (세차장 검색, 아래 참고) |
 
 4. **Deploy** 클릭
+
+### 카카오 세차장 검색 (권장)
+
+카카오맵과 비슷한 결과를 내려면 Vercel에 JavaScript 키를 넣습니다.
+
+1. [developers.kakao.com](https://developers.kakao.com) → 앱 → **앱 키** → **JavaScript 키** 복사
+2. **앱 설정 → 플랫폼** → Web 사이트 도메인에 `https://sechahaemal-a.vercel.app` 추가
+3. **제품 설정 → 지도/로컬** 활성화
+4. Vercel `NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY`에 붙여넣기 후 **Redeploy**
+
+(선택) Railway `KAKAO_REST_API_KEY`에 **REST API 키**를 넣으면 서버 검색에도 카카오 데이터가 쓰입니다.
 
 ---
 
@@ -121,6 +133,8 @@ CORS_ORIGINS=https://YOUR-APP.vercel.app
 | `NEXT_PUBLIC_API_URL` | `http://127.0.0.1:8000` | Railway URL |
 | `CORS_ORIGINS` | localhost 포함 (기본값) | Vercel URL |
 | `PUBLIC_DATA_API_KEY` | `backend/.env` | Railway Variables |
+| `NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY` | `frontend/.env.local` | Vercel (세차장 검색) |
+| `KAKAO_REST_API_KEY` | `backend/.env` | Railway (선택) |
 
 ---
 
