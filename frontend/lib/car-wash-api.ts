@@ -22,6 +22,18 @@ export interface NearbyCarWashResponse {
   search_radius_m?: number;
 }
 
+export async function fetchKakaoCarWashesFromApp(
+  lat: number,
+  lng: number,
+): Promise<NearbyCarWashResponse & { configured?: boolean; error?: string }> {
+  const url = `/api/car-wash/kakao?lat=${lat}&lng=${lng}`;
+  const response = await fetch(url, { cache: "no-store" });
+  if (!response.ok) {
+    return { items: [], count: 0, configured: true, error: "카카오 검색에 실패했습니다." };
+  }
+  return response.json();
+}
+
 export async function fetchNearbyCarWashes(
   lat: number,
   lng: number,

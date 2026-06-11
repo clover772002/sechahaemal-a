@@ -282,6 +282,10 @@ main {
   color: #fff;
 }
 
+.car-wash-sheet-inline-cta {
+  margin-bottom: 12px;
+}
+
 .car-wash-list {
   list-style: none;
   margin: 0;

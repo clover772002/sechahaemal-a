@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   buildKakaoMapRoadUrl,
   buildKakaoMapSearchFallbackUrl,
+  fetchKakaoCarWashesFromApp,
   fetchNearbyCarWashes,
   formatDistance,
   sortCarWashesByDistance,
@@ -34,6 +35,15 @@ export function NearbyCarWashSheet({ lat, lng, onClose }: NearbyCarWashSheetProp
 
     const loadPlaces = async () => {
       try {
+        const appKakao = await fetchKakaoCarWashesFromApp(lat, lng);
+        if (!cancelled && appKakao.items.length > 0) {
+          setItems(sortCarWashesByDistance(appKakao.items));
+          setDataSource("kakao");
+          setWarning(null);
+          setSearchRadiusM(appKakao.search_radius_m ?? 10_000);
+          return;
+        }
+
         if (isKakaoPlacesSearchAvailable()) {
           try {
             const kakaoItems = await searchKakaoCarWashes(lat, lng);
@@ -45,7 +55,7 @@ export function NearbyCarWashSheet({ lat, lng, onClose }: NearbyCarWashSheetProp
               return;
             }
           } catch {
-            // SDK 실패 시 서버 검색으로 폴백
+            // SDK 실패 시 공개 지도 검색으로 폴백
           }
         }
 
@@ -53,7 +63,11 @@ export function NearbyCarWashSheet({ lat, lng, onClose }: NearbyCarWashSheetProp
         if (!cancelled) {
           setItems(sortCarWashesByDistance(data.items));
           setDataSource(data.source ?? null);
-          setWarning(data.warning ?? null);
+          const kakaoHint =
+            !appKakao.configured && !isKakaoPlacesSearchAvailable()
+              ? "카카오 검색이 연결되지 않아 공개 지도만 표시 중이에요. Vercel에 KAKAO_REST_API_KEY를 넣고 재배포해 주세요."
+              : appKakao.error ?? data.warning ?? null;
+          setWarning(kakaoHint);
           setSearchRadiusM(data.search_radius_m ?? null);
         }
       } catch (err) {
@@ -129,9 +143,19 @@ export function NearbyCarWashSheet({ lat, lng, onClose }: NearbyCarWashSheetProp
       {!loading && !error && items.length > 0 && (
         <>
           {dataSource === "openstreetmap" && (
-            <p className="car-wash-sheet-note">
-              공개 지도에 등록된 곳만 보여요. 카카오맵보다 적을 수 있습니다.
-            </p>
+            <>
+              <p className="car-wash-sheet-note">
+                {warning ?? "공개 지도에 등록된 곳만 보여요. 카카오맵보다 적을 수 있습니다."}
+              </p>
+              <a
+                className="car-wash-fallback-btn car-wash-fallback-btn-primary car-wash-sheet-inline-cta"
+                href={buildKakaoMapSearchFallbackUrl(lat, lng)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                카카오맵에서 더 찾기
+              </a>
+            </>
           )}
           {dataSource === "mixed" && (
             <p className="car-wash-sheet-note">
