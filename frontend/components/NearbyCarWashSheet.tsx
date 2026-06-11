@@ -73,14 +73,24 @@ export function NearbyCarWashSheet({ lat, lng, onClose }: NearbyCarWashSheetProp
       )}
 
       {!loading && !error && items.length === 0 && (
-        <p className="car-wash-sheet-status">근처에 세차장을 찾지 못했어요.</p>
+        <div className="car-wash-sheet-fallback">
+          <p className="car-wash-sheet-status">근처에 세차장을 찾지 못했어요.</p>
+          <a
+            className="car-wash-fallback-btn"
+            href={buildKakaoMapSearchFallbackUrl(lat, lng)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            카카오맵에서 직접 찾기
+          </a>
+        </div>
       )}
 
       {!loading && !error && items.length > 0 && (
         <>
-          {dataSource === "openstreetmap" && (
+          {(dataSource === "openstreetmap" || dataSource === "mixed") && (
             <p className="car-wash-sheet-note">
-              공개 지도 데이터 기준입니다. 일부 세차장은 빠져 있을 수 있어요.
+              공개 지도 데이터가 포함되어 있어요. 일부 세차장은 빠져 있을 수 있습니다.
             </p>
           )}
         <ul className="car-wash-list">

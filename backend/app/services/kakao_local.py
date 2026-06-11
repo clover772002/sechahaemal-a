@@ -8,7 +8,7 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 KAKAO_KEYWORD_SEARCH_URL = "https://dapi.kakao.com/v2/local/search/keyword.json"
-DEFAULT_RADIUS_M = 3000
+DEFAULT_RADIUS_M = 5000
 MAX_RADIUS_M = 10000
 SEARCH_QUERIES = ("세차장", "셀프세차")
 

@@ -86,27 +86,54 @@ async def _search_overpass_car_washes(lat: float, lng: float, radius_m: int) -> 
     return items[:15]
 
 
-async def find_nearby_car_washes(lat: float, lng: float, radius_m: int = 3000) -> dict:
+def _merge_car_wash_items(kakao_items: list[dict], osm_items: list[dict]) -> list[dict]:
+    merged = list(kakao_items)
+    for osm_item in osm_items:
+        osm_lat, osm_lng = osm_item["lat"], osm_item["lng"]
+        is_duplicate = any(
+            _haversine_m(osm_lat, osm_lng, k["lat"], k["lng"]) < 80 for k in kakao_items
+        )
+        if not is_duplicate:
+            merged.append(osm_item)
+    merged.sort(key=lambda row: row.get("distance_m") if row.get("distance_m") is not None else 99999)
+    return merged[:15]
+
+
+async def find_nearby_car_washes(lat: float, lng: float, radius_m: int = 5000) -> dict:
+    kakao_items: list[dict] = []
+    osm_items: list[dict] = []
+    kakao_error: Exception | None = None
+    osm_error: Exception | None = None
+
     if settings.get_kakao_rest_api_key():
         try:
-            items = await search_nearby_car_washes(lat, lng, radius_m)
-            for item in items:
+            kakao_items = await search_nearby_car_washes(lat, lng, radius_m)
+            for item in kakao_items:
                 item["source"] = "kakao"
-            return {"items": items, "count": len(items), "source": "kakao"}
         except Exception as exc:
-            logger.warning("카카오 세차장 검색 실패, OpenStreetMap으로 대체: %s", exc)
+            kakao_error = exc
+            logger.warning("카카오 세차장 검색 실패: %s", exc)
 
     try:
-        items = await _search_overpass_car_washes(lat, lng, radius_m)
-        return {
-            "items": items,
-            "count": len(items),
-            "source": "openstreetmap",
-        }
+        osm_items = await _search_overpass_car_washes(lat, lng, radius_m)
     except Exception as exc:
-        logger.exception("OpenStreetMap 세차장 검색 실패")
-        if settings.get_kakao_rest_api_key():
-            raise RuntimeError(
-                "세차장 검색에 실패했습니다. 카카오 API 키를 확인하거나 잠시 후 다시 시도해 주세요."
-            ) from exc
-        raise RuntimeError("세차장 검색에 실패했습니다. 잠시 후 다시 시도해 주세요.") from exc
+        osm_error = exc
+        logger.warning("OpenStreetMap 세차장 검색 실패: %s", exc)
+
+    items = _merge_car_wash_items(kakao_items, osm_items)
+    if items:
+        if kakao_items and osm_items:
+            source = "mixed"
+        elif kakao_items:
+            source = "kakao"
+        else:
+            source = "openstreetmap"
+        return {"items": items, "count": len(items), "source": source}
+
+    if kakao_error is not None:
+        raise RuntimeError(
+            "세차장 검색에 실패했습니다. 카카오 API 키를 확인하거나 잠시 후 다시 시도해 주세요."
+        ) from kakao_error
+    if osm_error is not None:
+        raise RuntimeError("세차장 검색에 실패했습니다. 잠시 후 다시 시도해 주세요.") from osm_error
+    return {"items": [], "count": 0, "source": None}

@@ -14,13 +14,13 @@ export interface CarWashPlace {
 export interface NearbyCarWashResponse {
   items: CarWashPlace[];
   count: number;
-  source?: "kakao" | "openstreetmap";
+  source?: "kakao" | "openstreetmap" | "mixed";
 }
 
 export async function fetchNearbyCarWashes(
   lat: number,
   lng: number,
-  radius = 3000,
+  radius = 5000,
 ): Promise<NearbyCarWashResponse> {
   const url = `${API_BASE}/api/car-wash/nearby?lat=${lat}&lng=${lng}&radius=${radius}`;
   const response = await fetch(url, { cache: "no-store" });
@@ -39,5 +39,6 @@ export function formatDistance(meters: number | null): string {
 
 /** API 없이 카카오맵에서 세차장 검색 (폴백) */
 export function buildKakaoMapSearchFallbackUrl(lat: number, lng: number): string {
-  return `https://map.kakao.com/link/map/${lat},${lng},4`;
+  const keyword = encodeURIComponent("세차장");
+  return `https://map.kakao.com/link/search/${keyword}/${lat},${lng}`;
 }

@@ -64,7 +64,7 @@ def _car_wash_cache_key(lat: float, lng: float, radius: int) -> str:
 async def car_wash_nearby(
     lat: float = Query(..., ge=33.0, le=39.5),
     lng: float = Query(..., ge=124.0, le=132.0),
-    radius: int = Query(3000, ge=500, le=10000),
+    radius: int = Query(5000, ge=500, le=10000),
 ):
     cache_key = _car_wash_cache_key(lat, lng, radius)
     cached = get_cached(cache_key)
@@ -73,7 +73,8 @@ async def car_wash_nearby(
 
     try:
         response = await find_nearby_car_washes(lat, lng, radius)
-        set_cached(cache_key, response, CAR_WASH_CACHE_TTL_SECONDS)
+        if response.get("count", 0) > 0:
+            set_cached(cache_key, response, CAR_WASH_CACHE_TTL_SECONDS)
         return response
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
