@@ -38,7 +38,7 @@ GitHub 저장소: https://github.com/clover772002/sechahaemal-a
 | Key | Value |
 |-----|-------|
 | `PUBLIC_DATA_API_KEY` | 공공데이터 Encoding 키 (단기예보·에어코리아·**꽃가루농도위험지수** 활용 승인된 동일 키) |
-| `KAKAO_REST_API_KEY` | [카카오 개발자](https://developers.kakao.com) REST API 키 (가까운 세차장 검색) |
+| `KAKAO_REST_API_KEY` | [카카오 개발자](https://developers.kakao.com) **REST API 키** (JavaScript 키 아님). 앱 → 제품 설정 → **로컬** API 활성화 필수 |
 | `CORS_ORIGINS` | `https://YOUR-APP.vercel.app` (프론트 배포 후 입력) |
 
 5. **Settings** → **Networking** → **Generate Domain** 클릭

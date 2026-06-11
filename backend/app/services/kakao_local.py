@@ -26,17 +26,43 @@ def _parse_distance_meters(raw: str | None) -> int | None:
         return None
 
 
+def kakao_http_error_message(exc: httpx.HTTPStatusError) -> str:
+    status = exc.response.status_code
+    if status == 401:
+        return (
+            "카카오 REST API 키가 올바르지 않습니다. "
+            "Railway의 KAKAO_REST_API_KEY(REST API 키)를 확인해 주세요."
+        )
+    if status == 403:
+        return (
+            "카카오 로컬 API 사용 권한이 없습니다. "
+            "developers.kakao.com → 앱 → 제품 설정에서 '로컬' API를 활성화해 주세요."
+        )
+    try:
+        body = exc.response.json()
+        message = body.get("message")
+        if message:
+            return f"카카오 API 오류: {message}"
+    except Exception:
+        pass
+    return f"카카오 API 호출 실패(HTTP {status})"
+
+
 async def search_nearby_car_washes(
     lat: float,
     lng: float,
     radius_m: int = DEFAULT_RADIUS_M,
 ) -> list[dict]:
     if not settings.kakao_rest_api_key:
-        raise RuntimeError("KAKAO_REST_API_KEY가 설정되지 않았습니다.")
+        raise RuntimeError(
+            "KAKAO_REST_API_KEY가 설정되지 않았습니다. "
+            "Railway Variables에 카카오 REST API 키를 추가해 주세요."
+        )
 
     radius_m = max(500, min(radius_m, MAX_RADIUS_M))
     headers = {"Authorization": f"KakaoAK {settings.kakao_rest_api_key}"}
     merged: dict[str, dict] = {}
+    last_http_error: httpx.HTTPStatusError | None = None
 
     async with httpx.AsyncClient(timeout=8.0) as client:
         for query in SEARCH_QUERIES:
@@ -48,8 +74,14 @@ async def search_nearby_car_washes(
                 "sort": "distance",
                 "size": 15,
             }
-            response = await client.get(KAKAO_KEYWORD_SEARCH_URL, headers=headers, params=params)
-            response.raise_for_status()
+            try:
+                response = await client.get(KAKAO_KEYWORD_SEARCH_URL, headers=headers, params=params)
+                response.raise_for_status()
+            except httpx.HTTPStatusError as exc:
+                last_http_error = exc
+                logger.warning("카카오 검색 실패 query=%s status=%s", query, exc.response.status_code)
+                continue
+
             payload = response.json()
 
             for doc in payload.get("documents", []):
@@ -86,6 +118,11 @@ async def search_nearby_car_washes(
                     and (existing.get("distance_m") is None or distance_m < existing["distance_m"])
                 ):
                     merged[place_id] = item
+
+    if not merged:
+        if last_http_error is not None:
+            raise RuntimeError(kakao_http_error_message(last_http_error)) from last_http_error
+        return []
 
     items = list(merged.values())
     items.sort(key=lambda row: row.get("distance_m") if row.get("distance_m") is not None else 99999)

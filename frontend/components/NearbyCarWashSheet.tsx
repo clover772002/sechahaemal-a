@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
+  buildKakaoMapSearchFallbackUrl,
   fetchNearbyCarWashes,
   formatDistance,
   type CarWashPlace,
@@ -53,7 +54,19 @@ export function NearbyCarWashSheet({ lat, lng, onClose }: NearbyCarWashSheetProp
       </div>
 
       {loading && <p className="car-wash-sheet-status">주변 세차장 찾는 중...</p>}
-      {error && <p className="car-wash-sheet-error">{error}</p>}
+      {error && (
+        <div className="car-wash-sheet-fallback">
+          <p className="car-wash-sheet-error">{error}</p>
+          <a
+            className="car-wash-fallback-btn"
+            href={buildKakaoMapSearchFallbackUrl(lat, lng)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            카카오맵에서 직접 찾기
+          </a>
+        </div>
+      )}
 
       {!loading && !error && items.length === 0 && (
         <p className="car-wash-sheet-status">근처에 세차장을 찾지 못했어요.</p>

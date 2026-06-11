@@ -35,3 +35,8 @@ export function formatDistance(meters: number | null): string {
   if (meters < 1000) return `${meters}m`;
   return `${(meters / 1000).toFixed(1)}km`;
 }
+
+/** API 없이 카카오맵에서 세차장 검색 (폴백) */
+export function buildKakaoMapSearchFallbackUrl(lat: number, lng: number): string {
+  return `https://map.kakao.com/link/map/${lat},${lng},4`;
+}

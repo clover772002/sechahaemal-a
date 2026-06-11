@@ -80,8 +80,10 @@ async def car_wash_nearby(
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except httpx.HTTPStatusError as exc:
+        from app.services.kakao_local import kakao_http_error_message
+
         logger.exception("카카오 로컬 API 오류")
-        raise HTTPException(status_code=502, detail="세차장 검색에 실패했습니다.") from exc
+        raise HTTPException(status_code=502, detail=kakao_http_error_message(exc)) from exc
     except Exception as exc:
         logger.exception("세차장 검색 실패")
         raise HTTPException(status_code=502, detail="세차장 검색에 실패했습니다.") from exc
