@@ -57,7 +57,7 @@ async def health_check():
 
 
 def _car_wash_cache_key(lat: float, lng: float, radius: int) -> str:
-    return f"car_wash:v2:{round(lat, 3)}:{round(lng, 3)}:{radius}"
+    return f"car_wash:v3:{round(lat, 3)}:{round(lng, 3)}:{radius}"
 
 
 @app.get("/api/car-wash/nearby")

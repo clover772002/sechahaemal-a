@@ -14,8 +14,18 @@ MAX_RADIUS_M = 10000
 SEARCH_QUERIES = ("세차장", "셀프세차", "손세차", "세차")
 
 
-def build_navigate_url(name: str, lat: float, lng: float) -> str:
-    return f"https://map.kakao.com/link/to/{quote(name)},{lat},{lng}"
+def build_navigate_url(
+    name: str,
+    lat: float,
+    lng: float,
+    from_lat: float | None = None,
+    from_lng: float | None = None,
+) -> str:
+    to_part = f"{quote(name)},{lat},{lng}"
+    if from_lat is not None and from_lng is not None:
+        from_part = f"{quote('내 위치')},{from_lat},{from_lng}"
+        return f"https://map.kakao.com/link/by/car/{from_part}/{to_part}"
+    return f"https://map.kakao.com/link/to/{to_part}"
 
 
 def _parse_distance_meters(raw: str | None) -> int | None:
@@ -117,6 +127,8 @@ async def search_nearby_car_washes(
                     doc.get("place_name", "세차장"),
                     place_lat,
                     place_lng,
+                    lat,
+                    lng,
                 ),
             }
 

@@ -57,6 +57,19 @@ export function formatDistance(meters: number | null): string {
   return `${(meters / 1000).toFixed(1)}km`;
 }
 
+/** 내 위치 → 세차장 자동차 길찾기 (출발·도착 포함) */
+export function buildKakaoMapRoadUrl(
+  fromLat: number,
+  fromLng: number,
+  toName: string,
+  toLat: number,
+  toLng: number,
+): string {
+  const from = encodeURIComponent("내 위치");
+  const to = encodeURIComponent(toName);
+  return `https://map.kakao.com/link/by/car/${from},${fromLat},${fromLng}/${to},${toLat},${toLng}`;
+}
+
 /** API 없이 카카오맵에서 세차장 검색 (폴백) */
 export function buildKakaoMapSearchFallbackUrl(lat: number, lng: number): string {
   const keyword = encodeURIComponent("세차장");

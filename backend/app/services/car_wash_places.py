@@ -70,7 +70,7 @@ def _parse_nominatim_row(row: dict, lat: float, lng: float, radius_m: int) -> di
         "lng": place_lng,
         "phone": None,
         "distance_m": distance_m,
-        "navigate_url": build_navigate_url(name, place_lat, place_lng),
+        "navigate_url": build_navigate_url(name, place_lat, place_lng, lat, lng),
         "source": "openstreetmap",
     }
 

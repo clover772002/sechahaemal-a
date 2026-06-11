@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
+  buildKakaoMapRoadUrl,
   buildKakaoMapSearchFallbackUrl,
   fetchNearbyCarWashes,
   formatDistance,
@@ -129,7 +130,7 @@ export function NearbyCarWashSheet({ lat, lng, onClose }: NearbyCarWashSheetProp
               </div>
               <a
                 className="car-wash-navigate-btn"
-                href={place.navigate_url}
+                href={buildKakaoMapRoadUrl(lat, lng, place.name, place.lat, place.lng)}
                 target="_blank"
                 rel="noopener noreferrer"
               >
