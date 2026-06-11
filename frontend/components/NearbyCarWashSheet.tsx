@@ -20,6 +20,8 @@ export function NearbyCarWashSheet({ lat, lng, onClose }: NearbyCarWashSheetProp
   const [error, setError] = useState<string | null>(null);
   const [dataSource, setDataSource] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
+  const [searchRadiusM, setSearchRadiusM] = useState<number | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,6 +35,7 @@ export function NearbyCarWashSheet({ lat, lng, onClose }: NearbyCarWashSheetProp
           setItems(data.items);
           setDataSource(data.source ?? null);
           setWarning(data.warning ?? null);
+          setSearchRadiusM(data.search_radius_m ?? null);
         }
       })
       .catch((err) => {
@@ -47,7 +50,7 @@ export function NearbyCarWashSheet({ lat, lng, onClose }: NearbyCarWashSheetProp
     return () => {
       cancelled = true;
     };
-  }, [lat, lng]);
+  }, [lat, lng, reloadKey]);
 
   return (
     <section className="car-wash-sheet" aria-labelledby="car-wash-title">
@@ -78,15 +81,28 @@ export function NearbyCarWashSheet({ lat, lng, onClose }: NearbyCarWashSheetProp
       {!loading && !error && items.length === 0 && (
         <div className="car-wash-sheet-fallback">
           {warning && <p className="car-wash-sheet-note">{warning}</p>}
-          <p className="car-wash-sheet-status">근처에 세차장을 찾지 못했어요.</p>
-          <a
-            className="car-wash-fallback-btn"
-            href={buildKakaoMapSearchFallbackUrl(lat, lng)}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            카카오맵에서 직접 찾기
-          </a>
+          <p className="car-wash-sheet-status">
+            {searchRadiusM
+              ? `반경 ${searchRadiusM >= 1000 ? `${(searchRadiusM / 1000).toFixed(0)}km` : `${searchRadiusM}m`} 안에서 세차장을 찾지 못했어요.`
+              : "근처에 세차장을 찾지 못했어요."}
+          </p>
+          <div className="car-wash-fallback-actions">
+            <a
+              className="car-wash-fallback-btn car-wash-fallback-btn-primary"
+              href={buildKakaoMapSearchFallbackUrl(lat, lng)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              카카오맵에서 직접 찾기
+            </a>
+            <button
+              type="button"
+              className="car-wash-fallback-btn"
+              onClick={() => setReloadKey((value) => value + 1)}
+            >
+              다시 검색
+            </button>
+          </div>
         </div>
       )}
 

@@ -61,8 +61,10 @@ async def _search_overpass_car_washes(lat: float, lng: float, radius_m: int) -> 
     (
       node["amenity"="car_wash"](around:{radius_m},{lat},{lng});
       way["amenity"="car_wash"](around:{radius_m},{lat},{lng});
+      node["name"~"세차",i](around:{radius_m},{lat},{lng});
+      way["name"~"세차",i](around:{radius_m},{lat},{lng});
     );
-    out center 20;
+    out center 25;
     """
     compact_query = " ".join(query.split())
     payload = await _fetch_overpass_payload(compact_query)
@@ -115,7 +117,9 @@ def _merge_car_wash_items(kakao_items: list[dict], osm_items: list[dict]) -> lis
     return merged[:15]
 
 
-async def find_nearby_car_washes(lat: float, lng: float, radius_m: int = 5000) -> dict:
+async def _search_car_washes_at_radius(
+    lat: float, lng: float, radius_m: int
+) -> tuple[list[dict], Exception | None, Exception | None]:
     kakao_items: list[dict] = []
     osm_items: list[dict] = []
     kakao_error: Exception | None = None
@@ -128,23 +132,58 @@ async def find_nearby_car_washes(lat: float, lng: float, radius_m: int = 5000) -
                 item["source"] = "kakao"
         except Exception as exc:
             kakao_error = exc
-            logger.warning("카카오 세차장 검색 실패: %s", exc)
+            logger.warning("카카오 세차장 검색 실패 radius=%s: %s", radius_m, exc)
 
     try:
         osm_items = await _search_overpass_car_washes(lat, lng, radius_m)
     except Exception as exc:
         osm_error = exc
-        logger.warning("OpenStreetMap 세차장 검색 실패: %s", exc)
+        logger.warning("OpenStreetMap 세차장 검색 실패 radius=%s: %s", radius_m, exc)
 
-    items = _merge_car_wash_items(kakao_items, osm_items)
-    if items:
-        if kakao_items and osm_items:
-            source = "mixed"
-        elif kakao_items:
-            source = "kakao"
-        else:
-            source = "openstreetmap"
-        return {"items": items, "count": len(items), "source": source}
+    return _merge_car_wash_items(kakao_items, osm_items), kakao_error, osm_error
+
+
+def _build_car_wash_response(
+    items: list[dict],
+    kakao_items_count: int,
+    osm_items_count: int,
+    radius_m: int,
+) -> dict:
+    response: dict = {
+        "items": items,
+        "count": len(items),
+        "source": None,
+        "search_radius_m": radius_m,
+    }
+    if not items:
+        return response
+    if kakao_items_count and osm_items_count:
+        response["source"] = "mixed"
+    elif kakao_items_count:
+        response["source"] = "kakao"
+    else:
+        response["source"] = "openstreetmap"
+    return response
+
+
+async def find_nearby_car_washes(lat: float, lng: float, radius_m: int = 5000) -> dict:
+    radii = [radius_m]
+    if radius_m < 10_000:
+        radii.append(10_000)
+
+    kakao_error: Exception | None = None
+    osm_error: Exception | None = None
+    last_items: list[dict] = []
+    last_radius = radius_m
+
+    for search_radius in radii:
+        items, kakao_error, osm_error = await _search_car_washes_at_radius(lat, lng, search_radius)
+        last_items = items
+        last_radius = search_radius
+        if items:
+            kakao_count = sum(1 for row in items if row.get("source") == "kakao")
+            osm_count = len(items) - kakao_count
+            return _build_car_wash_response(items, kakao_count, osm_count, search_radius)
 
     warning: str | None = None
     if kakao_error is not None:
@@ -159,4 +198,6 @@ async def find_nearby_car_washes(lat: float, lng: float, radius_m: int = 5000) -
     elif osm_error is not None:
         warning = f"{warning} (공개 지도 검색도 실패했습니다.)"
 
-    return {"items": [], "count": 0, "source": None, "warning": warning}
+    response = _build_car_wash_response(last_items, 0, 0, last_radius)
+    response["warning"] = warning
+    return response

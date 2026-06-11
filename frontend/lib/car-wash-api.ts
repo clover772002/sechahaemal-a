@@ -16,6 +16,7 @@ export interface NearbyCarWashResponse {
   count: number;
   source?: "kakao" | "openstreetmap" | "mixed" | null;
   warning?: string | null;
+  search_radius_m?: number;
 }
 
 export async function fetchNearbyCarWashes(
