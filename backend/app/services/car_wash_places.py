@@ -18,8 +18,8 @@ OVERPASS_ENDPOINTS = (
     "https://lz4.overpass-api.de/api/interpreter",
 )
 
-SEARCH_BUDGET_SECONDS = 14.0
-OVERPASS_CLIENT_TIMEOUT_SECONDS = 12.0
+SEARCH_BUDGET_SECONDS = 18.0
+OVERPASS_CLIENT_TIMEOUT_SECONDS = 16.0
 
 
 def _haversine_m(lat1: float, lng1: float, lat2: float, lng2: float) -> int:
@@ -129,7 +129,7 @@ async def _try_kakao(lat: float, lng: float, radius_m: int) -> tuple[list[dict],
 
 async def _try_osm(lat: float, lng: float, radius_m: int) -> tuple[list[dict], Exception | None]:
     try:
-        return await asyncio.wait_for(_search_overpass_car_washes(lat, lng, radius_m), timeout=11.0), None
+        return await asyncio.wait_for(_search_overpass_car_washes(lat, lng, radius_m), timeout=15.0), None
     except Exception as exc:
         logger.warning("OpenStreetMap 세차장 검색 실패 radius=%s: %s", radius_m, exc)
         return [], exc
@@ -184,29 +184,23 @@ def _build_warning(kakao_error: Exception | None, osm_error: Exception | None) -
 
 
 async def find_nearby_car_washes(lat: float, lng: float, radius_m: int = 5000) -> dict:
-    radii = [radius_m]
-    if radius_m < 10_000:
-        radii.append(10_000)
-
+    search_radius = max(radius_m, 10_000)
     kakao_error: Exception | None = None
     osm_error: Exception | None = None
-    last_radius = radius_m
 
-    for search_radius in radii:
-        last_radius = search_radius
-        try:
-            items, kakao_error, osm_error = await asyncio.wait_for(
-                _search_car_washes_at_radius(lat, lng, search_radius),
-                timeout=SEARCH_BUDGET_SECONDS,
-            )
-        except TimeoutError:
-            logger.warning("세차장 검색 시간 초과 radius=%s", search_radius)
-            items = []
-            osm_error = TimeoutError("세차장 검색 시간 초과")
+    try:
+        items, kakao_error, osm_error = await asyncio.wait_for(
+            _search_car_washes_at_radius(lat, lng, search_radius),
+            timeout=SEARCH_BUDGET_SECONDS,
+        )
+    except TimeoutError:
+        logger.warning("세차장 검색 시간 초과 radius=%s", search_radius)
+        items = []
+        osm_error = TimeoutError("세차장 검색 시간 초과")
 
-        if items:
-            return _build_car_wash_response(items, search_radius)
+    if items:
+        return _build_car_wash_response(items, search_radius)
 
-    response = _build_car_wash_response([], last_radius)
+    response = _build_car_wash_response([], search_radius)
     response["warning"] = _build_warning(kakao_error, osm_error)
     return response
