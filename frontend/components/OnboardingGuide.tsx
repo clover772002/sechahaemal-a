@@ -3,22 +3,6 @@ export function OnboardingGuide() {
     <section className="onboarding-guide">
       <section className="onboarding-section">
         <h3 className="onboarding-section-title">
-          <span>해야 할</span> 때
-        </h3>
-        <ul className="onboarding-list">
-          <li>
-            <strong>먼지가 이미 두껍게 쌓인 상태</strong> — 이 상태에서 비만 오면 먼지가 비에
-            눌러 붙어 물때·검은 줄띠가 생깁니다.
-          </li>
-          <li>
-            <strong>미세먼지·꽃가루가 차체에 달라붙기 시작했을 때</strong> — 맑아 보여도
-            닦을수록 지저분해지는 경우가 많습니다.
-          </li>
-        </ul>
-      </section>
-
-      <section className="onboarding-section">
-        <h3 className="onboarding-section-title">
           <span>미뤄야 할</span> 때
         </h3>
         <ul className="onboarding-list">
