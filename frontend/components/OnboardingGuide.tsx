@@ -21,9 +21,6 @@ export function OnboardingGuide() {
         <h3 className="onboarding-section-title">
           <span>미뤄야 할</span> 때
         </h3>
-        <p className="onboarding-lead">
-          앞으로 3일 동안 차에 엉겨붙을 이물질(비·먼지·꽃가루)이 없어야, 세차 효과가 오래 갑니다.
-        </p>
         <ul className="onboarding-list">
           <li>
             <strong>3일 안 강수확률이 높을 때</strong> — 세차 직후 비를 맞으면 먼지·미세먼지·꽃가루가

@@ -53,6 +53,7 @@ main {
   margin: 4px 0 0;
   color: var(--muted);
   font-size: 0.88rem;
+  line-height: 1.55;
 }
 
 .user-chip {
