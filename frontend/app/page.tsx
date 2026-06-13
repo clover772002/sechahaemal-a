@@ -186,7 +186,7 @@ export default function HomePage() {
       : "예보 불러오는 중..."
     : result
       ? `${result.location.region} · ${result.location.station_name}`
-      : "앞으로 3일 동안 차에 엉겨붙을 이물질(비·먼지·꽃가루)이 없어야, 세차 효과가 오래 갑니다.";
+      : "3일동안 비가 오지 않고 먼지, 꽃가루가 없어야, 세차 효과가 오래 갑니다.";
 
   return (
     <main>
