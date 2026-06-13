@@ -1,41 +1,54 @@
+const COMPARE_ITEMS = [
+  {
+    label: "비",
+    bad: "세차 직후 물때·얼룩이 생기기 쉽습니다.",
+    good: "비 없으면 청결이 오래 갑니다.",
+  },
+  {
+    label: "미세먼지",
+    bad: "공기 중 먼지가 곧 다시 달라붙습니다.",
+    good: "먼지 없으면 청결이 오래 갑니다.",
+  },
+  {
+    label: "꽃가루",
+    bad: "외장에 박혀 잘 안 지워질 수 있습니다.",
+    good: "꽃가루 없으면 청결이 오래 갑니다.",
+  },
+] as const;
+
 export function OnboardingGuide() {
   return (
     <section className="onboarding-guide">
-      <section className="onboarding-section">
-        <h3 className="onboarding-section-title">
-          <span>해야 할</span> 때
-        </h3>
-        <ul className="onboarding-list">
-          <li>
-            <strong>먼지가 이미 두껍게 쌓인 상태</strong> — 이 상태에서 비만 오면 먼지가 비에
-            눌러 붙어 물때·검은 줄띠가 생깁니다.
-          </li>
-          <li>
-            <strong>미세먼지·꽃가루가 차체에 달라붙기 시작했을 때</strong> — 맑아 보여도
-            닦을수록 지저분해지는 경우가 많습니다.
-          </li>
-        </ul>
+      <section className="onboarding-header">
+        <h2 className="onboarding-title">3일 청결도 비교</h2>
+        <p className="onboarding-lead">
+          앞으로 3일 동안 비·미세먼지·꽃가루가 차에 닿는지를 보고, 세차 후에도 깨끗할지
+          판단합니다.
+        </p>
       </section>
 
-      <section className="onboarding-section">
-        <h3 className="onboarding-section-title">
-          <span>미뤄야 할</span> 때
-        </h3>
-        <ul className="onboarding-list">
-          <li>
-            <strong>3일 안 강수확률이 높을 때</strong> — 세차 직후 비를 맞으면 먼지·미세먼지·꽃가루가
-            비에 눌러 붙고, 물때·얼룩이 생겨 오히려 더 지저분해집니다.
+      <ul className="onboarding-compare-list">
+        {COMPARE_ITEMS.map((item) => (
+          <li key={item.label} className="onboarding-compare-item">
+            <p className="onboarding-compare-label">{item.label}</p>
+            <div className="onboarding-compare-rows">
+              <p>
+                <span className="onboarding-compare-tag onboarding-compare-tag--bad">있으면</span>
+                {item.bad}
+              </p>
+              <p>
+                <span className="onboarding-compare-tag onboarding-compare-tag--good">없으면</span>
+                {item.good}
+              </p>
+            </div>
           </li>
-          <li>
-            <strong>미세먼지·황사가 나쁠 때</strong> — 닦은 직후 공기 중 입자가 다시 달라붙어 청결
-            유지 시간이 짧아집니다.
-          </li>
-          <li>
-            <strong>꽃가루 위험지수가 높을 때</strong> — 꽃가루가 수분·먼지와 엉겨 외장에 박히면
-            일반 세차만으로 잘 안 지워집니다.
-          </li>
-        </ul>
-      </section>
+        ))}
+      </ul>
+
+      <p className="onboarding-summary">
+        세 가지가 모두 적을수록 세차 타이밍이 좋습니다. 버튼을 누르면 내 위치 기준으로
+        비교합니다.
+      </p>
 
       <p className="onboarding-disclaimer">
         예보는 확률·예측이며 실제와 다를 수 있습니다. 차량 상태·주행·주차 환경은 사람마다 달라
