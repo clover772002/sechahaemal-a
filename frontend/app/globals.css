@@ -40,8 +40,13 @@ main {
 .topbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   margin-bottom: 20px;
+}
+
+.brand {
+  text-align: center;
+  width: 100%;
 }
 
 .brand h1 {
